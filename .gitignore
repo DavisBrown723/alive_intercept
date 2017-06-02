@@ -1,0 +1,5 @@
+src/build
+src/!.gitkeep
+src/vcproj/!readme.txt
+src/!vcproj/.gitkeep
+src/intercept/.vs
