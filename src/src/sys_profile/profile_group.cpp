@@ -108,8 +108,11 @@ namespace alive {
         // functional
 
 
-        void ProfileGroup::updateOnSimulationStep() {
-            intercept::sqf::set_marker_pos(_debugMarker, _pos);
+        void ProfileGroup::update(float dt_) {
+
+
+            if (_debugEnabled)
+                intercept::sqf::set_marker_pos(_debugMarker, _pos);
         }
 
         void ProfileGroup::spawn() {

@@ -14,12 +14,19 @@ namespace alive {
         
         class ProfileSystem : public alive::common::Singleton<ProfileSystem> , public alive::common::Module {
 
+
+            friend class ProfileHandler;
+            friend class ProfileActivator;
+
+
             public:
 
 
                 ProfileSystem();
                 ProfileSystem(int spawnDistance_);
                 virtual ~ProfileSystem();
+
+                void start();
 
 
                 // getters / setters
@@ -35,7 +42,7 @@ namespace alive {
 
                 static void registerScriptCommands();
 
-                virtual void onSimulationStep() override;
+                virtual void onSimulationStep(float dt_) override;
 
                 bool debugEnabled() { return _debugEnabled; }
 
@@ -53,9 +60,9 @@ namespace alive {
 
                 ProfileHandler _profileHandler;
 
-                int _spawnDistance;
+                int _spawnDistance = 1500;
 
-                float _lastSimTime = 0.f;
+                //int _lastSimulatedProfileIndex = 0;
 
                 void _activateProfiles();
                 void _simulateProfileMovement();

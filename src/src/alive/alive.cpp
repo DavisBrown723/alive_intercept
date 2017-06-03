@@ -37,6 +37,10 @@ void __cdecl intercept::on_frame() {
     alive::Core::get().onSimulationStep();
 }
 
+void __cdecl intercept::mission_stopped() {
+    alive::Core::get().onMissionStopped();
+}
+
 
 
 

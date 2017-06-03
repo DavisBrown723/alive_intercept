@@ -29,74 +29,29 @@ namespace alive {
         }
         
         void ProfileSystem::registerScriptCommands() {
-            // Profile System
-
-            sqf_commands::handles::_startProfileSystem = intercept::client::host::functions.register_sqf_function_unary(
-                "startProfileSystem",
-                "Starts the ALiVE Profile System with the given arguments.",
-                userFunctionWrapper<sqf_commands::startProfileSystem>,
-                intercept::types::__internal::GameDataType::NOTHING,
-                intercept::types::__internal::GameDataType::ARRAY
-            );
-
-            sqf_commands::handles::_enableProfileSystemDebug = intercept::client::host::functions.register_sqf_function_unary(
-                "enableProfileSystemDebug",
-                "Sets debug on the ALiVE Profile System.",
-                userFunctionWrapper<sqf_commands::enableProfileSystemDebug>,
-                intercept::types::__internal::GameDataType::NOTHING,
-                intercept::types::__internal::GameDataType::BOOL
-            );
-
-            // Profile Handler
-
-            sqf_commands::handles::_getProfiles = intercept::client::host::functions.register_sqf_function_nular(
-                "getProfiles",
-                "Returns an array of all ALiVE Profiles.",
-                userFunctionWrapper<sqf_commands::getProfiles>,
-                intercept::types::__internal::GameDataType::ARRAY
-            );
-
-            sqf_commands::handles::_getProfilesBySide = intercept::client::host::functions.register_sqf_function_unary(
-                "getProfilesBySide",
-                "Returns an array of all ALiVE Profiles belonging to the given side.",
-                userFunctionWrapper<sqf_commands::getProfilesBySide>,
-                intercept::types::__internal::GameDataType::ARRAY,
-                intercept::types::__internal::GameDataType::SIDE
-            );
-
-            // Profiles
-
-            sqf_commands::handles::_createProfile = intercept::client::host::functions.register_sqf_function_unary(
-                "createProfile",
-                "Creates an ALiVE profile.",
-                userFunctionWrapper<sqf_commands::createProfile>,
-                intercept::types::__internal::GameDataType::STRING,
-                intercept::types::__internal::GameDataType::ARRAY
-            );
-
-            sqf_commands::handles::_getProfilePosition = intercept::client::host::functions.register_sqf_function_unary(
-                "getProfilePosition",
-                "Gets the position of an ALiVE Profile.",
-                userFunctionWrapper<sqf_commands::getProfilePosition>,
-                intercept::types::__internal::GameDataType::ARRAY,
-                intercept::types::__internal::GameDataType::STRING
-            );
-
-            sqf_commands::handles::_getProfileSpeed = intercept::client::host::functions.register_sqf_function_unary(
-                "getProfileSpeed",
-                "Gets the speed of an ALiVE Profile.",
-                userFunctionWrapper<sqf_commands::getProfileSpeed>,
-                intercept::types::__internal::GameDataType::ARRAY,
-                intercept::types::__internal::GameDataType::STRING
-            );
+            sqf_commands::registerScriptCommands();
         }
 
-        void ProfileSystem::onSimulationStep() {
+        void ProfileSystem::start() {
+            // register profile system with core
+
+            alive::Core::get().registerModule(&ProfileSystem::get());
+
+            // start systems
+
+            
+        }
+
+
+        // functional
+
+
+        void ProfileSystem::onSimulationStep(float dt_) {
             _activateProfiles();
             _simulateProfileMovement();
 
             for (auto& profile : _profileHandler.getProfiles())
-                profile->updateOnSimulationStep();
+                profile->update(dt_);
         }
 
         void ProfileSystem::_activateProfiles() {
@@ -132,16 +87,6 @@ namespace alive {
         }
 
         void ProfileSystem::_simulateProfileMovement() {
-            // calculate delta time
-
-            float currTime = intercept::sqf::time();
-
-            if (_lastSimTime == 0) _lastSimTime = currTime;
-
-            float dt = currTime - _lastSimTime / 1;
-
-            _lastSimTime - currTime;
-
             // simulate profiles
 
             std::vector<ProfileWaypoint> waypoints;
@@ -173,7 +118,7 @@ namespace alive {
                         newPos = common::math::getRelPos(
                             profile->getPosition(),
                             common::math::getRelDir(profile->getPosition(), waypoints[0].position),
-                            moveDist * dt
+                            moveDist
                         );
 
                         profile->setPosition(newPos);

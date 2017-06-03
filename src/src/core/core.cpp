@@ -4,6 +4,8 @@
 #include "sys_profile\profile_system.hpp"
 #include "common\include.hpp"
 
+#include <chrono>
+
 
 namespace alive {
 
@@ -60,11 +62,19 @@ namespace alive {
 
         for (auto& module : _modules)
             module->onPreStart();
+
+        // reset frame time
+        // to avoid large initial
+        // simulation jumps
+
+        _lastFrameTime = std::chrono::system_clock::now();
     }
 
     void Core::onPreInit() {
         for (auto& module : _modules)
             module->onPreInit();
+
+        _missionRunning = true;
     }
 
     void Core::onPostInit() {
@@ -72,9 +82,24 @@ namespace alive {
             module->onPostInit();
     }
 
-    void Core::onSimulationStep() {
+    void Core::onMissionStopped() {
         for (auto& module : _modules)
-            module->onSimulationStep();
+            module->onMissionStopped();
+
+        _missionRunning = false;
+    }
+
+    void Core::onSimulationStep() {
+        // calculate elapsed time since last simulation step
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::duration<double> diff = now - _lastFrameTime;
+
+        _lastFrameTime = now;
+
+        float dt = diff.count();
+
+        for (auto& module : _modules)
+            module->onSimulationStep(dt);
     }
 
 }

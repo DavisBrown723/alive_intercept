@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <chrono>
 
 
 namespace alive {
@@ -27,16 +28,22 @@ namespace alive {
 
             void registerModule(alive::common::Module* module_);
 
+            bool isMissionRunning() { return _missionRunning; }
+
             void onPreStart();
             void onPreInit();
             void onPostInit();
             void onSimulationStep();
+            void onMissionStopped();
 
 
         private:
 
 
             bool _initialized = false;
+            bool _missionRunning = false;
+
+            std::chrono::time_point<std::chrono::system_clock> _lastFrameTime;
 
             std::vector< std::shared_ptr<alive::common::Module> > _modules;
 

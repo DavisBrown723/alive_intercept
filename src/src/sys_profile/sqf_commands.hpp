@@ -18,6 +18,8 @@ namespace alive {
                 extern intercept::types::registered_sqf_function _getProfileSpeed;
             }
 
+            void registerScriptCommands();
+
             // Profile System
 
             game_value startProfileSystem(game_value rightArg_);

@@ -56,7 +56,7 @@ namespace alive {
                 // functional
 
                 
-                virtual void updateOnSimulationStep();
+                virtual void update(float dt_);
 
                 virtual void spawn();
                 virtual void despawn();
