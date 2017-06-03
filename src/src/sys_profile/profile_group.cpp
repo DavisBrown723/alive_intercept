@@ -226,9 +226,9 @@ namespace alive {
 
                     // move profile
 
-                    intercept::types::vector3 newPos = common::math::getRelPos(
+                    intercept::types::vector3 newPos = common::world::getRelPos(
                         this->getPosition(),
-                        common::math::getRelDir(this->getPosition(), _waypoints[0].position),
+                        common::world::getRelDir(this->getPosition(), _waypoints[0].position),
                         moveDist * dt_
                     );
 
