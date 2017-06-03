@@ -91,10 +91,10 @@ namespace alive {
 
     void Core::onSimulationStep() {
         // calculate elapsed time since last simulation step
-        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-        std::chrono::duration<double> diff = now - _lastFrameTime;
 
-        _lastFrameTime = now;
+        std::chrono::duration<double> diff = (std::chrono::system_clock::now()) - _lastFrameTime;
+
+        _lastFrameTime = std::chrono::system_clock::now();
 
         float dt = diff.count();
 

@@ -48,7 +48,7 @@ namespace alive {
 
         void ProfileSystem::onSimulationStep(float dt_) {
             _activateProfiles();
-            _simulateProfileMovement();
+            _simulateProfileMovement(dt_);
 
             for (auto& profile : _profileHandler.getProfiles())
                 profile->update(dt_);
@@ -86,7 +86,7 @@ namespace alive {
             }
         }
 
-        void ProfileSystem::_simulateProfileMovement() {
+        void ProfileSystem::_simulateProfileMovement(float dt_) {
             // simulate profiles
 
             std::vector<ProfileWaypoint> waypoints;
@@ -94,6 +94,8 @@ namespace alive {
             int moveDist;
             bool waypointComplete;
             intercept::types::vector3 newPos;
+
+            int simRate = intercept::sqf::acc_time();
 
             for (auto& profile : ProfileSystem::get().getProfileHandler().getProfiles()) {
                 if (!profile->isActive()) {
@@ -118,7 +120,7 @@ namespace alive {
                         newPos = common::math::getRelPos(
                             profile->getPosition(),
                             common::math::getRelDir(profile->getPosition(), waypoints[0].position),
-                            moveDist
+                            moveDist * dt_ * simRate
                         );
 
                         profile->setPosition(newPos);

@@ -65,7 +65,7 @@ namespace alive {
                 //int _lastSimulatedProfileIndex = 0;
 
                 void _activateProfiles();
-                void _simulateProfileMovement();
+                void _simulateProfileMovement(float dt_);
 
 
         };
