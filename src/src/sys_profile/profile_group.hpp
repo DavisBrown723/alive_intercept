@@ -56,7 +56,7 @@ namespace alive {
                 // functional
 
                 
-                virtual void update(float dt_);
+                virtual void update(const float dt_);
 
                 virtual void spawn();
                 virtual void despawn();
@@ -89,10 +89,12 @@ namespace alive {
                 // functions
 
 
+                std::string _generateNextUnitID();
+
                 virtual void _calculateSpeed();
                 virtual void _createDebugMarker();
 
-                std::string _generateNextUnitID();
+                virtual void _updateMovement(const float dt_);
 
 
         };

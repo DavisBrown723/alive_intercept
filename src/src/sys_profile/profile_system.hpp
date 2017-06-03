@@ -42,7 +42,7 @@ namespace alive {
 
                 static void registerScriptCommands();
 
-                virtual void onSimulationStep(float dt_) override;
+                virtual void onSimulationStep(const float dt_) override;
 
                 bool debugEnabled() { return _debugEnabled; }
 
@@ -65,7 +65,6 @@ namespace alive {
                 //int _lastSimulatedProfileIndex = 0;
 
                 void _activateProfiles();
-                void _simulateProfileMovement(float dt_);
 
 
         };

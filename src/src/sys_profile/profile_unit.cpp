@@ -34,6 +34,10 @@ namespace alive {
                 intercept::sqf::delete_vehicle(_unitObject);
         }
 
+
+        // functional
+
+
         void ProfileUnit::spawn(ProfileGroup* profile_) {
             if (_active)
                 return;

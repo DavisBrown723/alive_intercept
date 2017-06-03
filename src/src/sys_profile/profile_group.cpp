@@ -108,8 +108,8 @@ namespace alive {
         // functional
 
 
-        void ProfileGroup::update(float dt_) {
-
+        void ProfileGroup::update(const float dt_) {
+            _updateMovement(dt_);
 
             if (_debugEnabled)
                 intercept::sqf::set_marker_pos(_debugMarker, _pos);
@@ -166,8 +166,12 @@ namespace alive {
         }
 
 
-        // private
+        // protected
 
+
+        std::string ProfileGroup::_generateNextUnitID() {
+            return _id + "_unit_" + std::to_string(_nextUnitID);
+        }
 
         void ProfileGroup::_calculateSpeed() {
             int minSpeed = 0;
@@ -179,7 +183,7 @@ namespace alive {
                     if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
             }
 
-            _speed = minSpeed * 0.25;
+            _speed = minSpeed * 0.20;
         }
 
         void ProfileGroup::_createDebugMarker() {
@@ -203,8 +207,46 @@ namespace alive {
             }
         }
 
-        std::string ProfileGroup::_generateNextUnitID() {
-            return _id + "_unit_" + std::to_string(_nextUnitID);
+        void ProfileGroup::_updateMovement(const float dt_) {
+            if (!this->isActive()) {
+                if (this->getWaypoints().size() > 0) {
+                    int distToCompletion = (_waypoints[0].position.distance(this->getPosition())) - _waypoints[0].completionRadius;
+
+                    int moveDist;
+                    bool waypointComplete = false;
+
+                    // determine distance to move
+
+                    if (this->getSpeed() < distToCompletion) {
+                        moveDist = this->getSpeed();
+                    } else {
+                        moveDist = distToCompletion;
+                        waypointComplete = true;
+                    }
+
+                    // move profile
+
+                    intercept::types::vector3 newPos = common::math::getRelPos(
+                        this->getPosition(),
+                        common::math::getRelDir(this->getPosition(), _waypoints[0].position),
+                        moveDist * dt_
+                    );
+
+                    this->setPosition(newPos);
+
+                    // #TODO: Handle different waypoint types
+
+                    if (waypointComplete)
+                        _waypoints.erase(_waypoints.begin());
+                }
+            } else {
+                // profile is spawned
+
+                intercept::types::object leader = intercept::sqf::leader(_groupObject);
+
+                if (!leader.is_null())
+                    this->setPosition(intercept::sqf::get_pos(leader));
+            }
         }
 
 

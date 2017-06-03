@@ -46,9 +46,8 @@ namespace alive {
         // functional
 
 
-        void ProfileSystem::onSimulationStep(float dt_) {
+        void ProfileSystem::onSimulationStep(const float dt_) {
             _activateProfiles();
-            _simulateProfileMovement(dt_);
 
             for (auto& profile : _profileHandler.getProfiles())
                 profile->update(dt_);
@@ -83,54 +82,6 @@ namespace alive {
                     profile->spawn();
                 else
                     if (profile->isActive()) profile->despawn();
-            }
-        }
-
-        void ProfileSystem::_simulateProfileMovement(float dt_) {
-            // simulate profiles
-
-            std::vector<ProfileWaypoint> waypoints;
-            int distToCompletion;
-            int moveDist;
-            bool waypointComplete;
-            intercept::types::vector3 newPos;
-
-            int simRate = intercept::sqf::acc_time();
-
-            for (auto& profile : ProfileSystem::get().getProfileHandler().getProfiles()) {
-                if (!profile->isActive()) {
-                    if (profile->getWaypoints().size() > 0) {
-                        waypoints = profile->getWaypoints();
-
-                        distToCompletion = (waypoints[0].position.distance(profile->getPosition())) - waypoints[0].completionRadius;
-
-                        waypointComplete = false;
-
-                        // determine distance to move
-
-                        if (profile->getSpeed() < distToCompletion) {
-                            moveDist = profile->getSpeed();
-                        } else {
-                            moveDist = distToCompletion;
-                            waypointComplete = true;
-                        }
-
-                        // move profile
-
-                        newPos = common::math::getRelPos(
-                            profile->getPosition(),
-                            common::math::getRelDir(profile->getPosition(), waypoints[0].position),
-                            moveDist * dt_ * simRate
-                        );
-
-                        profile->setPosition(newPos);
-
-                        if (waypointComplete)
-                            waypoints.erase(waypoints.begin());
-                    }
-                } else {
-                    // profile is spawned
-                }
             }
         }
 

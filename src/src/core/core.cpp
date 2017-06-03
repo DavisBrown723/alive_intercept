@@ -96,7 +96,7 @@ namespace alive {
 
         _lastFrameTime = std::chrono::system_clock::now();
 
-        float dt = diff.count();
+        float dt = diff.count() * int(intercept::sqf::acc_time());
 
         for (auto& module : _modules)
             module->onSimulationStep(dt);
