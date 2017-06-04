@@ -23,63 +23,63 @@ namespace alive {
             void registerScriptCommands() {
                 // Profile System
 
-                sqf_commands::handles::_startProfileSystem = intercept::client::host::functions.register_sqf_function_unary(
+                sqf_commands::handles::_startProfileSystem = intercept::client::host::registerFunction(
                     "startProfileSystem",
                     "Starts the ALiVE Profile System with the given arguments.",
                     userFunctionWrapper<sqf_commands::startProfileSystem>,
-                    intercept::types::__internal::GameDataType::NOTHING,
-                    intercept::types::__internal::GameDataType::ARRAY
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::ARRAY
                 );
 
-                sqf_commands::handles::_enableProfileSystemDebug = intercept::client::host::functions.register_sqf_function_unary(
+                sqf_commands::handles::_enableProfileSystemDebug = intercept::client::host::registerFunction(
                     "enableProfileSystemDebug",
                     "Sets debug on the ALiVE Profile System.",
                     userFunctionWrapper<sqf_commands::enableProfileSystemDebug>,
-                    intercept::types::__internal::GameDataType::NOTHING,
-                    intercept::types::__internal::GameDataType::BOOL
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::BOOL
                 );
 
                 // Profile Handler
 
-                sqf_commands::handles::_getProfiles = intercept::client::host::functions.register_sqf_function_nular(
+                sqf_commands::handles::_getProfiles = intercept::client::host::registerFunction(
                     "getProfiles",
                     "Returns an array of all ALiVE Profiles.",
                     userFunctionWrapper<sqf_commands::getProfiles>,
-                    intercept::types::__internal::GameDataType::ARRAY
+                    intercept::types::GameDataType::ARRAY
                 );
 
-                sqf_commands::handles::_getProfilesBySide = intercept::client::host::functions.register_sqf_function_unary(
+                sqf_commands::handles::_getProfilesBySide = intercept::client::host::registerFunction(
                     "getProfilesBySide",
                     "Returns an array of all ALiVE Profiles belonging to the given side.",
                     userFunctionWrapper<sqf_commands::getProfilesBySide>,
-                    intercept::types::__internal::GameDataType::ARRAY,
-                    intercept::types::__internal::GameDataType::SIDE
+                    intercept::types::GameDataType::ARRAY,
+                    intercept::types::GameDataType::SIDE
                 );
 
                 // Profiles
 
-                sqf_commands::handles::_createProfile = intercept::client::host::functions.register_sqf_function_unary(
+                sqf_commands::handles::_createProfile = intercept::client::host::registerFunction(
                     "createProfile",
                     "Creates an ALiVE profile.",
                     userFunctionWrapper<sqf_commands::createProfile>,
-                    intercept::types::__internal::GameDataType::STRING,
-                    intercept::types::__internal::GameDataType::ARRAY
+                    intercept::types::GameDataType::STRING,
+                    intercept::types::GameDataType::ARRAY
                 );
 
-                sqf_commands::handles::_getProfilePosition = intercept::client::host::functions.register_sqf_function_unary(
+                sqf_commands::handles::_getProfilePosition = intercept::client::host::registerFunction(
                     "getProfilePosition",
                     "Gets the position of an ALiVE Profile.",
                     userFunctionWrapper<sqf_commands::getProfilePosition>,
-                    intercept::types::__internal::GameDataType::ARRAY,
-                    intercept::types::__internal::GameDataType::STRING
+                    intercept::types::GameDataType::ARRAY,
+                    intercept::types::GameDataType::STRING
                 );
 
-                sqf_commands::handles::_getProfileSpeed = intercept::client::host::functions.register_sqf_function_unary(
+                sqf_commands::handles::_getProfileSpeed = intercept::client::host::registerFunction(
                     "getProfileSpeed",
                     "Gets the speed of an ALiVE Profile.",
                     userFunctionWrapper<sqf_commands::getProfileSpeed>,
-                    intercept::types::__internal::GameDataType::ARRAY,
-                    intercept::types::__internal::GameDataType::STRING
+                    intercept::types::GameDataType::ARRAY,
+                    intercept::types::GameDataType::STRING
                 );
             }
 

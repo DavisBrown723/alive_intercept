@@ -1,5 +1,7 @@
 #pragma once
 
+#include "intercept.hpp"
+
 
 namespace alive {
     namespace common {
@@ -17,11 +19,12 @@ namespace alive {
                 virtual void pause() { _paused = true; }
                 virtual void unpause() { _paused = false; }
 
-                virtual void onSimulationStep(float dt_) {}
+                virtual void onSimulationStep(const float dt_) {}
                 virtual void onPreStart() {}
                 virtual void onPreInit() {}
                 virtual void onPostInit() {}
                 virtual void onMissionStopped() {}
+                virtual void onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) {}
 
 
             private:

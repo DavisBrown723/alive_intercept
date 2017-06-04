@@ -29,6 +29,7 @@ namespace alive {
                 // getters / setters
 
 
+                const std::string& getID() { return _id; }
                 std::string getUnitClass() { return _unitClass; }
                 bool isActive() { return _active; }
                 int getHealth() { return _health; }

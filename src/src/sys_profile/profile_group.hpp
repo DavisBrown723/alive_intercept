@@ -62,28 +62,26 @@ namespace alive {
                 virtual void despawn();
 
                 virtual void addUnit(ProfileUnit* unit_);
+                virtual void removeUnit(ProfileUnit* unit_);
                 virtual void removeUnit(const std::string& unitID_);
 
 
             protected:
+
 
                 std::string _id;
                 bool _active;
                 bool _debugEnabled = false;
                 int _speed;
 
-                intercept::types::side _side;
-
-                intercept::types::vector3 _pos;
-
-                std::vector< std::shared_ptr<ProfileUnit> > _units;
-                std::vector< ProfileWaypoint > _waypoints;
-
-                intercept::types::group _groupObject;
-
-                intercept::types::marker _debugMarker;
-
                 int _nextUnitID = 0;
+
+                intercept::types::side                      _side;
+                intercept::types::vector3                   _pos;
+                std::vector< std::shared_ptr<ProfileUnit> > _units;
+                std::vector< ProfileWaypoint >              _waypoints;
+                intercept::types::group                     _groupObject;
+                intercept::types::marker                    _debugMarker;
 
 
                 // functions

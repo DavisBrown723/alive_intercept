@@ -41,6 +41,9 @@ void __cdecl intercept::mission_stopped() {
     alive::Core::get().onMissionStopped();
 }
 
+void __cdecl intercept::killed(intercept::types::object& killed_, intercept::types::object& killer_) {
+    alive::Core::get().onUnitKilled(killed_, killer_);
+}
 
 
 

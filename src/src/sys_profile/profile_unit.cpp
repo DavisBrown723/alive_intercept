@@ -45,10 +45,12 @@ namespace alive {
             if (!intercept::sqf::is_null(_unitObject))
                 intercept::sqf::delete_vehicle(_unitObject);
 
-            _unitObject = intercept::sqf::create_unit(profile_->_groupObject, _unitClass, profile_->_pos);
+            _unitObject = intercept::sqf::create_unit(profile_->_groupObject, _unitClass, profile_->getPosition());
             
             // apply profile information to unit
 
+            intercept::sqf::set_variable(_unitObject, "alive_profileID", profile_->getID());
+            intercept::sqf::set_variable(_unitObject, "alive_profileUnitID", game_value(_id));
             intercept::sqf::set_damage(_unitObject, 1 - _health, false);
 
             _active = true;

@@ -35,6 +35,7 @@ namespace alive {
             void onPostInit();
             void onSimulationStep();
             void onMissionStopped();
+            void onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_);
 
 
         private:

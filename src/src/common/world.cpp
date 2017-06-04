@@ -17,7 +17,7 @@ namespace alive {
                 deg += 90 - 180;
                 deg = std::abs(deg);
 
-                return deg;
+                return static_cast<int>(std::round(deg));
             }
 
             intercept::types::vector3 getRelPos(const intercept::types::vector3& pos_, const float dir_, const float dist_) {

@@ -30,7 +30,7 @@ namespace alive {
             _pos(pos_)
         {
             for (auto& unitClass : unitClasses_)
-                _units.push_back(std::make_shared<ProfileUnit>(unitClass));
+                addUnit(new ProfileUnit(unitClass));
 
             _calculateSpeed();
         }
@@ -46,12 +46,12 @@ namespace alive {
 
             // get unit classes from group config
 
-            int configSize = intercept::sqf::count(groupConfig_);
+            int configSize = static_cast<int>(intercept::sqf::count(groupConfig_));
             intercept::types::config configItem;
             intercept::sqf::config_entry configEntry;
 
             for (int i = 0; i != configSize; i++) {
-                configItem = intercept::sqf::select(groupConfig_, i);
+                configItem = intercept::sqf::select(groupConfig_, static_cast<float>(i));
 
                 if (intercept::sqf::is_class(configItem)) {
                     configEntry = configItem;
@@ -62,13 +62,14 @@ namespace alive {
             // create units
 
             for (auto& unitClass : unitClasses)
-                _units.push_back(std::make_shared<ProfileUnit>(unitClass));
+                addUnit(new ProfileUnit(unitClass));
 
             _calculateSpeed();
         }
 
         ProfileGroup::~ProfileGroup() {
-
+            if (_debugEnabled)
+                intercept::sqf::delete_marker(_debugMarker);
         }
 
         ProfileGroup* ProfileGroup::Create(const intercept::types::side side_, const intercept::types::vector3& pos_, const std::vector<std::string>& unitClasses_) {
@@ -153,16 +154,23 @@ namespace alive {
             _calculateSpeed();
         }
 
+        void ProfileGroup::removeUnit(ProfileUnit* unit_) {
+            this->removeUnit(unit_->getID());
+        }
+
         void ProfileGroup::removeUnit(const std::string& unitID_) {
             for (auto& i = _units.begin(); i != _units.end(); i++) {
                 if (i->get()->_id == unitID_) {
                     _units.erase(i);
 
+                    if (_units.size() == 0)
+                        ProfileSystem::get().getProfileHandler().unregisterProfile(this);
+                    else
+                        _calculateSpeed();
+
                     return;
                 }
             }
-
-            _calculateSpeed();
         }
 
 
@@ -170,7 +178,7 @@ namespace alive {
 
 
         std::string ProfileGroup::_generateNextUnitID() {
-            return _id + "_unit_" + std::to_string(_nextUnitID);
+            return "profileUnit_" + std::to_string(_nextUnitID++);
         }
 
         void ProfileGroup::_calculateSpeed() {
@@ -183,17 +191,17 @@ namespace alive {
                     if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
             }
 
-            _speed = minSpeed * 0.20;
+            _speed = static_cast<int>(minSpeed * 0.20);
         }
 
         void ProfileGroup::_createDebugMarker() {
             _debugMarker = intercept::sqf::create_marker(_id + "_debug", _pos);
 
             intercept::sqf::set_marker_pos(_debugMarker, _pos);
-            intercept::sqf::set_marker_size(_debugMarker, intercept::types::vector2(0.6, 0.6));
+            intercept::sqf::set_marker_size(_debugMarker, intercept::types::vector2(0.6f, 0.6f));
 
             if (!_active)
-                intercept::sqf::set_marker_alpha(_debugMarker, 0.3);
+                intercept::sqf::set_marker_alpha(_debugMarker, 0.3f);
 
             if (_side == common::RV::get().sides.East) {
                 intercept::sqf::set_marker_color(_debugMarker, "ColorRed");
@@ -210,7 +218,9 @@ namespace alive {
         void ProfileGroup::_updateMovement(const float dt_) {
             if (!this->isActive()) {
                 if (this->getWaypoints().size() > 0) {
-                    int distToCompletion = (_waypoints[0].position.distance(this->getPosition())) - _waypoints[0].completionRadius;
+                    int distToCompletion = static_cast<int>(
+                        (_waypoints[0].position.distance(this->getPosition())) - _waypoints[0].completionRadius
+                    );
 
                     int moveDist;
                     bool waypointComplete = false;

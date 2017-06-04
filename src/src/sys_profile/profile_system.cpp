@@ -53,6 +53,18 @@ namespace alive {
                 profile->update(dt_);
         }
 
+        void ProfileSystem::onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) {
+            std::string profileID = intercept::sqf::get_variable(killed_, "alive_profileID", "");
+
+            if (profileID != "") {
+                ProfileGroup* profile = _profileHandler.getProfile(profileID);
+
+                std::string profileUnitID = intercept::sqf::get_variable(killed_, "alive_profileUnitID", "");
+
+                profile->removeUnit(profileUnitID);
+            }
+        }
+
         void ProfileSystem::_activateProfiles() {
             // get player positions
 

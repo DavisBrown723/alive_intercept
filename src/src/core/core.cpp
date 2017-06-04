@@ -33,11 +33,11 @@ namespace alive {
     }
 
     void Core::registerScriptCommands() {
-        sqf_commands::handles::_initALiVE = intercept::client::host::functions.register_sqf_function_nular(
+        sqf_commands::handles::_initALiVE = intercept::client::host::registerFunction(
             "initALiVE",
             "Initializes ALiVE base systems.",
             userFunctionWrapper<sqf_commands::initALiVE>,
-            intercept::types::__internal::GameDataType::NOTHING
+            intercept::types::GameDataType::NOTHING
         );
     }
 
@@ -89,6 +89,11 @@ namespace alive {
         _missionRunning = false;
     }
 
+    void Core::onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) {
+        for (auto& module : _modules)
+            module->onUnitKilled(killed_, killer_);
+    }
+
     void Core::onSimulationStep() {
         // calculate elapsed time since last simulation step
 
@@ -96,7 +101,7 @@ namespace alive {
 
         _lastFrameTime = std::chrono::system_clock::now();
 
-        float dt = diff.count() * int(intercept::sqf::acc_time());
+        float dt = static_cast<float>(diff.count()) * intercept::sqf::acc_time();
 
         for (auto& module : _modules)
             module->onSimulationStep(dt);
