@@ -1,2 +1,2 @@
 # alive_intercept
-An ALiVE implementation using the Intercept library.
+A C++ ALiVE implementation using the Intercept library.
