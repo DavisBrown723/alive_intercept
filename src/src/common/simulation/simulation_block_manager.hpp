@@ -7,6 +7,10 @@ namespace alive {
     namespace common {
         namespace simulation {
 
+            // #TODO: This needs to be hooked up to a singleton class that handles all simulation managers.
+            // Elapsed time needs to be increased on a per-frame basis to allow for different levels of A3
+            // sim rate between simulation times
+
 
             template<class T>
             class SimulationBlockManager {

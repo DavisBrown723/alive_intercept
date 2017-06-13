@@ -62,6 +62,7 @@ namespace alive {
                 ProfileHandler _profileHandler;
 
                 int _spawnDistance = 1500;
+                int _nextProfileToSimIndex = 0;
 
                 void _activateProfiles();
 

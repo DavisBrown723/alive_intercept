@@ -51,17 +51,20 @@ namespace alive {
 
             // simulate profiles
 
-            auto block = _profileHandler.getNextProfileSimBlock();
+            int simulatedThisFrame = 0;
+            float dt = std::max(std::ceil(static_cast<float>(_profileHandler.getProfiles().size() / 50)), 1.f) * dt_;
             
-            if (block != nullptr) {
+            for(
+                auto i = _profileHandler.getProfiles().begin() + _nextProfileToSimIndex;
+                simulatedThisFrame < 50 && i != _profileHandler.getProfiles().end();
+                i++, simulatedThisFrame++
+            )
+                (*i)->update(dt);
 
-                float dt = block->getTimeSinceSimulation();
+            _nextProfileToSimIndex += simulatedThisFrame;
 
-                for (auto& profile : block->getItems())
-                    profile->update(dt);
-
-                block->resetLastSimulationTime();
-            }
+            if (_nextProfileToSimIndex == _profileHandler.getProfiles().size())
+                _nextProfileToSimIndex = 0;
         }
 
         void ProfileSystem::onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) {
