@@ -5,7 +5,7 @@ file(GLOB CORE_SOURCES *.h *.hpp *.c *.cpp)
 
 
 
-SOURCE_GROUP("core" FILES ${CORE_SOURCES})
+SOURCE_GROUP("main" FILES ${CORE_SOURCES})
 
 
 

@@ -5,7 +5,7 @@ file(GLOB SYS_PROFILE_SOURCES *.h *.hpp *.c *.cpp)
 
 
 
-SOURCE_GROUP("sys_profile" FILES ${SYS_PROFILE_SOURCES})
+SOURCE_GROUP("main" FILES ${SYS_PROFILE_SOURCES})
 
 
 

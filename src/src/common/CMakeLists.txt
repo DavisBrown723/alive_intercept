@@ -5,7 +5,7 @@ file(GLOB COMMON_SOURCES *.h *.hpp *.c *.cpp)
 
 
 
-SOURCE_GROUP("common" FILES ${COMMON_SOURCES})
+SOURCE_GROUP("main" FILES ${COMMON_SOURCES})
 
 
 

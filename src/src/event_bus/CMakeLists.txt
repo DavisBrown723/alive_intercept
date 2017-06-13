@@ -5,7 +5,7 @@ file(GLOB EVENT_BUS_SOURCES *.h *.hpp *.c *.cpp)
 
 
 
-SOURCE_GROUP("event_bus" FILES ${EVENT_BUS_SOURCES})
+SOURCE_GROUP("main" FILES ${EVENT_BUS_SOURCES})
 
 
 
