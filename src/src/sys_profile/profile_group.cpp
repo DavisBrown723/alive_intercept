@@ -2,6 +2,7 @@
 
 #include "profile_group.hpp"
 
+#include "profile.hpp"
 #include "profile_unit.hpp"
 #include "profile_system.hpp"
 #include "profile_handler.hpp"
@@ -13,21 +14,16 @@ namespace alive {
 
         ProfileGroup::ProfileGroup()
             :
-            _id(""),
-            _active(false),
-            _speed(0),
-            _side(common::RV::get().sides.West),
-            _pos(intercept::types::vector3())
+            Profile({ 0,0,0 }),
+            _side(common::RV::get().sides.West)
         {
 
         }
 
         ProfileGroup::ProfileGroup(const intercept::types::side side_, const intercept::types::vector3& pos_, const std::vector<std::string>& unitClasses_)
             :
-            _id(""),
-            _active(false),
-            _side(side_),
-            _pos(pos_)
+            Profile(pos_),
+            _side(side_)
         {
             for (auto& unitClass : unitClasses_)
                 addUnit(new ProfileUnit(unitClass));
@@ -37,10 +33,8 @@ namespace alive {
 
         ProfileGroup::ProfileGroup(const intercept::types::side side_, const intercept::types::vector3& pos_, const intercept::types::config& groupConfig_)
             :
-            _id(""),
-            _active(false),
-            _side(side_),
-            _pos(pos_)
+            Profile(pos_),
+            _side(side_)
         {
             std::vector<std::string> unitClasses;
 
@@ -89,23 +83,6 @@ namespace alive {
         }
 
 
-        // getters / setters
-
-
-        void ProfileGroup::enableDebug(bool enabled_) {
-            if (enabled_ == _debugEnabled)
-                return;
-
-            _debugEnabled = enabled_;
-
-            if (_debugEnabled) {
-                _createDebugMarker();
-            } else {
-                intercept::sqf::delete_marker(_debugMarker);
-            }
-        }
-
-
         // functional
 
 
@@ -151,7 +128,7 @@ namespace alive {
             if (_waypoints.size() != groupWaypoints.size()) {
                 _waypoints.clear();
 
-                for (int i = intercept::sqf::current_waypoint(_groupObject); i != groupWaypoints.size(); i++)
+                for (int i = static_cast<int>(intercept::sqf::current_waypoint(_groupObject)); i != groupWaypoints.size(); i++)
                     _waypoints.push_back(ProfileWaypoint(groupWaypoints[i]));
             }
 
@@ -212,7 +189,7 @@ namespace alive {
             _waypoints.erase(toDelete_);
         }
 
-        void ProfileGroup::removeWaypoint(int index_) {
+        void ProfileGroup::removeWaypoint(unsigned int index_) {
             if (index_ < _waypoints.size())
                 removeWaypoint(_waypoints.begin() + index_);
         }

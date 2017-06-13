@@ -52,7 +52,7 @@ namespace alive {
             // simulate profiles
 
             int simulatedThisFrame = 0;
-            float dt = std::max(std::ceil(static_cast<float>(_profileHandler.getProfiles().size() / 50)), 1.f) * dt_;
+            float dt = std::max(std::ceil(static_cast<float>(_profileHandler.getProfiles().size() / 50)),1.f) * dt_;
             
             for(
                 auto i = _profileHandler.getProfiles().begin() + _nextProfileToSimIndex;

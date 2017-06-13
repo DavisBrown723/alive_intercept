@@ -13,8 +13,10 @@ namespace alive {
             _active(false),
             _health(1)
         {
-            _speed = intercept::sqf::get_number(
-                intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
+            _speed = static_cast<int>(
+                intercept::sqf::get_number(
+                    intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
+                )
             );
         }
 
@@ -24,8 +26,10 @@ namespace alive {
             _active(false),
             _health(health_)
         {
-            _speed = intercept::sqf::get_number(
-               intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
+            _speed = static_cast<int>(
+                intercept::sqf::get_number(
+                    intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
+                )
             );
         }
 
@@ -51,7 +55,7 @@ namespace alive {
 
             intercept::sqf::set_variable(_unitObject, "alive_profileID", profile_->getID());
             intercept::sqf::set_variable(_unitObject, "alive_profileUnitID", game_value(_id));
-            intercept::sqf::set_damage(_unitObject, 1 - _health, false);
+            intercept::sqf::set_damage(_unitObject, static_cast<float>(1 - _health), false);
 
             _active = true;
         }
@@ -62,7 +66,7 @@ namespace alive {
 
             // update information
 
-            _health = 1 - (intercept::sqf::damage(_unitObject));
+            _health = 1 - static_cast<int>(intercept::sqf::damage(_unitObject));
 
             intercept::sqf::delete_vehicle(_unitObject);
 

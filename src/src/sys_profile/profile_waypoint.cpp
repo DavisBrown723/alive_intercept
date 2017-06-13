@@ -35,7 +35,7 @@ namespace alive {
         ProfileWaypoint::ProfileWaypoint(RVWaypoint& wp_) {
             position = intercept::sqf::waypoint_position(wp_);
             type = intercept::sqf::waypoint_type(wp_);
-            completionRadius = intercept::sqf::waypoint_completeion_radius(wp_);
+            completionRadius = static_cast<int>(intercept::sqf::waypoint_completeion_radius(wp_));
             speed = intercept::sqf::waypoint_speed(wp_);
             formation = intercept::sqf::waypoint_formation(wp_);
             behavior = intercept::sqf::waypoint_behaviour(wp_);
@@ -59,7 +59,7 @@ namespace alive {
             
             auto startIndex = statements.find("profileWaypointComplete");
             if (startIndex != std::string::npos) {
-                statements.erase(startIndex, statements.find(startIndex, ';'));
+                statements.erase(startIndex, statements.find(';', startIndex));
             }
 
             intercept::sqf::set_waypoint_statements(wp, "", statements + ("profileWaypointComplete " + profile_->getID() + ";"));

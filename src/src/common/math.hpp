@@ -10,6 +10,9 @@ namespace alive {
             extern const double PI;
 
             template<typename T>
+            inline int round(T num_) { return static_cast<int>(num_); }
+
+            template<typename T>
             inline T toRadians(T deg_) { return deg_ * (PI / 180); }
 
             template<typename T>

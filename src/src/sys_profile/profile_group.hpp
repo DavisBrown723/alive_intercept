@@ -2,6 +2,7 @@
 
 #include "intercept.hpp"
 
+#include "profile.hpp"
 #include "profile_unit.hpp"
 #include "profile_waypoint.hpp"
 
@@ -16,13 +17,10 @@ namespace alive {
     namespace sys_profile {
 
 
-        class ProfileGroup {
-
-            friend class ProfileUnit;
-
+        class ProfileGroup : public Profile {
 
             friend class ProfileHandler;
-
+            friend class ProfileUnit;
 
             public:
 
@@ -37,58 +35,43 @@ namespace alive {
                 static ProfileGroup* Create(const intercept::types::side side_, const intercept::types::vector3& pos_, const intercept::types::config& groupConfig_);
 
                 
-                // getters / setters
+                // getters
 
 
-                const std::string& getID()                                  { return _id; }
                 intercept::types::side getSide()                            { return _side; }
-                bool isActive()                                             { return _active; }
-                bool debugEnabled()                                         { return _debugEnabled; }
-                int getSpeed()                                              { return _speed; }
-                intercept::types::vector3& getPosition()                    { return _pos; }
                 std::vector< std::shared_ptr<ProfileUnit> >& getUnits()     { return _units; }
                 std::vector< ProfileWaypoint >& getWaypoints()              { return _waypoints; }
-                
-                virtual void setPosition(intercept::types::vector3 newPos_) { _pos = newPos_; }
-                void enableDebug(bool enabled_);
 
+                // setters
 
                 // functional
 
                 
-                virtual void update(const float dt_);
+                virtual void update(const float dt_) override;
 
-                virtual void spawn();
-                virtual void despawn();
+                virtual void spawn() override;
+                virtual void despawn() override;
 
                 virtual void addUnit(ProfileUnit* unit_);
                 virtual void removeUnit(ProfileUnit* unit_);
                 virtual void removeUnit(const std::string& unitID_);
 
                 virtual int addWaypoint(ProfileWaypoint& wp_);
-                virtual void removeWaypoint(int index_);
+                virtual void removeWaypoint(unsigned int index_);
                 virtual void removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_);
 
 
             protected:
 
 
-                std::string _id;
-                bool _active;
-                bool _debugEnabled = false;
-                int _speed;
-
                 int _cycleWaypointCount = 0;
-
                 int _nextUnitID = 0;
 
                 intercept::types::side                      _side;
-                intercept::types::vector3                   _pos;
                 std::vector< std::shared_ptr<ProfileUnit> > _units;
                 std::vector< ProfileWaypoint >              _waypoints;
                 std::vector< ProfileWaypoint >              _waypointsCompleted;
                 intercept::types::group                     _groupObject;
-                intercept::types::marker                    _debugMarker;
 
 
                 // functions
@@ -96,11 +79,10 @@ namespace alive {
 
                 std::string _generateNextUnitID();
 
-                virtual void _calculateSpeed();
-                virtual void _createDebugMarker();
+                virtual void _calculateSpeed() override;
+                virtual void _createDebugMarker() override;
 
                 virtual void _updateMovement(const float dt_);
-
 
         };
 
