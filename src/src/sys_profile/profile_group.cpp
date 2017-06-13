@@ -128,12 +128,32 @@ namespace alive {
             if (_debugEnabled)
                 intercept::sqf::set_marker_alpha(_debugMarker, 1.f);
 
+            // ProfileWaypoints to real waypoints
+
+            for (auto& waypoint : _waypoints)
+                waypoint.toRVWaypoint(this, _groupObject);
+
             _active = true;
         }
 
         void ProfileGroup::despawn() {
             if (!_active)
                 return;
+
+            // real waypoints to profile waypoints
+
+            auto groupWaypoints = intercept::sqf::waypoints(_groupObject);
+
+            // update profile waypoints
+            // with any waypoints added
+            // during spawn
+
+            if (_waypoints.size() != groupWaypoints.size()) {
+                _waypoints.clear();
+
+                for (int i = intercept::sqf::current_waypoint(_groupObject); i != groupWaypoints.size(); i++)
+                    _waypoints.push_back(ProfileWaypoint(groupWaypoints[i]));
+            }
 
             for (auto& unit : _units)
                 unit->despawn();
@@ -171,6 +191,30 @@ namespace alive {
                     return;
                 }
             }
+        }
+
+        int ProfileGroup::addWaypoint(ProfileWaypoint& wp_) {
+            if (wp_.type == ProfileWaypoint::Type::CYCLE)
+                _cycleWaypointCount++;
+
+            _waypoints.push_back(wp_);
+
+            if (_active)
+                wp_.toRVWaypoint(this, _groupObject);
+
+            return _waypoints.size() - 1;
+        }
+
+        void ProfileGroup::removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_) {
+            if (toDelete_->type == ProfileWaypoint::Type::CYCLE)
+                _cycleWaypointCount--;
+
+            _waypoints.erase(toDelete_);
+        }
+
+        void ProfileGroup::removeWaypoint(int index_) {
+            if (index_ < _waypoints.size())
+                removeWaypoint(_waypoints.begin() + index_);
         }
 
 
@@ -216,19 +260,26 @@ namespace alive {
         }
 
         void ProfileGroup::_updateMovement(const float dt_) {
-            if (!this->isActive()) {
-                if (this->getWaypoints().size() > 0) {
+            if (!_active) {
+                if (_waypoints.size() > 0) {
+                    ProfileWaypoint& waypoint = _waypoints[0];
+
                     int distToCompletion = static_cast<int>(
-                        (_waypoints[0].position.distance(this->getPosition())) - _waypoints[0].completionRadius
+                        common::math::distance(waypoint.position, _pos) - waypoint.completionRadius
                     );
+
+                    if (distToCompletion < 1) {
+                        this->removeWaypoint(_waypoints.begin());
+                        return;
+                    }
 
                     int moveDist;
                     bool waypointComplete = false;
 
                     // determine distance to move
 
-                    if (this->getSpeed() < distToCompletion) {
-                        moveDist = this->getSpeed();
+                    if (_speed < distToCompletion) {
+                        moveDist = _speed;
                     } else {
                         moveDist = distToCompletion;
                         waypointComplete = true;
@@ -236,18 +287,29 @@ namespace alive {
 
                     // move profile
 
-                    intercept::types::vector3 newPos = common::world::getRelPos(
-                        this->getPosition(),
-                        common::world::getRelDir(this->getPosition(), _waypoints[0].position),
-                        moveDist * dt_
+                    intercept::types::vector3 newPos = common::math::lerp(
+                        _pos,
+                        waypoint.position,
+                        static_cast<float>(moveDist) * dt_ / static_cast<float>(distToCompletion)
                     );
 
                     this->setPosition(newPos);
 
                     // #TODO: Handle different waypoint types
 
-                    if (waypointComplete)
-                        _waypoints.erase(_waypoints.begin());
+                    if (waypointComplete) {
+                        if (_cycleWaypointCount > 0)
+                            _waypointsCompleted.push_back(ProfileWaypoint(waypoint));
+
+                        this->removeWaypoint(_waypoints.begin());
+
+                        if (waypoint.type == ProfileWaypoint::Type::CYCLE) {
+                            for (auto& completedWP : _waypointsCompleted)
+                                addWaypoint(ProfileWaypoint(completedWP));
+
+                            _waypointsCompleted.clear();
+                        }
+                    }
                 }
             } else {
                 // profile is spawned

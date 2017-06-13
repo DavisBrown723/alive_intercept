@@ -65,6 +65,10 @@ namespace alive {
                 virtual void removeUnit(ProfileUnit* unit_);
                 virtual void removeUnit(const std::string& unitID_);
 
+                virtual int addWaypoint(ProfileWaypoint& wp_);
+                virtual void removeWaypoint(int index_);
+                virtual void removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_);
+
 
             protected:
 
@@ -74,12 +78,15 @@ namespace alive {
                 bool _debugEnabled = false;
                 int _speed;
 
+                int _cycleWaypointCount = 0;
+
                 int _nextUnitID = 0;
 
                 intercept::types::side                      _side;
                 intercept::types::vector3                   _pos;
                 std::vector< std::shared_ptr<ProfileUnit> > _units;
                 std::vector< ProfileWaypoint >              _waypoints;
+                std::vector< ProfileWaypoint >              _waypointsCompleted;
                 intercept::types::group                     _groupObject;
                 intercept::types::marker                    _debugMarker;
 

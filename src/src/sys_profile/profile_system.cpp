@@ -49,8 +49,19 @@ namespace alive {
         void ProfileSystem::onSimulationStep(const float dt_) {
             _activateProfiles();
 
-            for (auto& profile : _profileHandler.getProfiles())
-                profile->update(dt_);
+            // simulate profiles
+
+            auto block = _profileHandler.getNextProfileSimBlock();
+            
+            if (block != nullptr) {
+
+                float dt = block->getTimeSinceSimulation();
+
+                for (auto& profile : block->getItems())
+                    profile->update(dt);
+
+                block->resetLastSimulationTime();
+            }
         }
 
         void ProfileSystem::onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) {
@@ -76,6 +87,8 @@ namespace alive {
             // activate profiles within
             // spawn distance of a player
 
+            int spawnDistanceSqr = _spawnDistance * _spawnDistance;
+
             bool inRange;
             intercept::types::vector3 profilePos;
 
@@ -85,7 +98,7 @@ namespace alive {
 
                 for (auto& playerPos : playerPositions) {
                     if (!inRange) {
-                        if (playerPos.distance(profilePos) < _spawnDistance)
+                        if (common::math::distanceSqr(playerPos, profilePos) < spawnDistanceSqr)
                             inRange = true;
                     }
                 }

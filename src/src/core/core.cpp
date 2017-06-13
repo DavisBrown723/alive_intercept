@@ -97,11 +97,11 @@ namespace alive {
     void Core::onSimulationStep() {
         // calculate elapsed time since last simulation step
 
-        std::chrono::duration<double> diff = (std::chrono::system_clock::now()) - _lastFrameTime;
+        std::chrono::duration<float> diff = (std::chrono::system_clock::now()) - _lastFrameTime;
 
         _lastFrameTime = std::chrono::system_clock::now();
 
-        float dt = static_cast<float>(diff.count()) * intercept::sqf::acc_time();
+        float dt = diff.count() * intercept::sqf::acc_time();
 
         for (auto& module : _modules)
             module->onSimulationStep(dt);

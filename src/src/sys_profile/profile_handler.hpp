@@ -15,6 +15,9 @@ namespace alive {
         class ProfileHandler {
 
 
+            friend class ProfileSystem;
+
+
             public:
 
 
@@ -53,8 +56,10 @@ namespace alive {
                 const ProfileVector& getProfiles();
                 const ProfileVector& getProfiles(const intercept::types::side side_);
 
+                common::simulation::SimulationBlock<ProfileGroup>* getNextProfileSimBlock();
 
-            private:
+
+            protected:
 
 
                 bool _debugEnabled = false;
@@ -69,6 +74,8 @@ namespace alive {
                 int nextProfileID = 0;
 
                 std::string _generateID();
+
+                common::simulation::SimulationBlockManager<ProfileGroup> _simBlockManager{ 50 };
 
 
         };

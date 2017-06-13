@@ -63,8 +63,6 @@ namespace alive {
 
                 int _spawnDistance = 1500;
 
-                //int _lastSimulatedProfileIndex = 0;
-
                 void _activateProfiles();
 
 

@@ -7,27 +7,49 @@ namespace alive {
     namespace sys_profile {
 
 
-        struct ProfileWaypoint {
+        class ProfileGroup;
 
-            enum class Speed { LIMITED, NORMAL, FULL };
-            enum class Formation { FILE, COLUMN, STAG_COLUMN, WEDGE, ECH_LEFT, ECH_RIGHT, VEE, LINE, DIAMOND };
 
-            ProfileWaypoint(
-                const intercept::types::vector3& pos_,
-                const int completionRadius_ = 50,
-                const Speed speed_ = Speed::NORMAL,
-                const Formation formation_ = Formation::WEDGE
-            )
-                : position(pos_), completionRadius(completionRadius_), speed(speed_), formation(formation_)
-            {
+        class ProfileWaypoint {
 
-            }
-                
+            
+            public:
 
-            intercept::types::vector3 position;
-            int completionRadius = 50;
-            Speed speed;
-            Formation formation;
+
+                using RVWaypoint = intercept::sqf::waypoint;
+                using Type = RVWaypoint::type;
+                using Speed = RVWaypoint::speed;
+                using Formation = RVWaypoint::formation;
+                using Behavior = RVWaypoint::behaviour;
+                using CombatMode = RVWaypoint::combat_mode;
+
+                ProfileWaypoint(
+                    const intercept::types::vector3&    pos_,
+                    Type                                type_ = Type::MOVE,
+                    int                                 completionRadius_ = 50,
+                    Speed                               speed_ = Speed::UNCHANGED,
+                    Formation                           formation_ = Formation::WEDGE,
+                    Behavior                            behavior_ = Behavior::UNCHANGED,
+                    CombatMode                          combatMode_ = CombatMode::NO_CHANGE,
+                    const std::string&                  statements_ = std::string()
+                );
+
+                ProfileWaypoint(RVWaypoint& wp_);
+
+                virtual ~ProfileWaypoint();
+
+                RVWaypoint toRVWaypoint(ProfileGroup* profile_, intercept::types::group& group_);
+
+                intercept::types::vector3   position;
+                int                         completionRadius = 50;
+                Type                        type;
+                Speed                       speed;
+                Formation                   formation;
+                Behavior                    behavior;
+                CombatMode                  combatMode;
+                std::string                 statements;
+
+
         };
 
 

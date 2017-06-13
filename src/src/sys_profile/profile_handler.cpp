@@ -38,6 +38,8 @@ namespace alive {
                 _profilesGuer.push_back(profile_);
 
             if (_debugEnabled) profile_->enableDebug(true);
+
+            _simBlockManager.insertItem(profile_);
         }
 
         void ProfileHandler::unregisterProfile(ProfileGroup* profile_) {
@@ -89,6 +91,10 @@ namespace alive {
             throw std::invalid_argument("ProfileHandler: getProfiles - Invalid Side Passed");
 
             return _profilesEast;
+        }
+
+        common::simulation::SimulationBlock<ProfileGroup>* ProfileHandler::getNextProfileSimBlock() {
+            return _simBlockManager.getNextBlock();
         }
 
 
