@@ -1,7 +1,7 @@
 #include "profile_handler.hpp"
 
 #include "common\include.hpp"
-#include "profile_group.hpp"
+#include "profile.hpp"
 
 #include <memory>
 #include <algorithm>
@@ -18,7 +18,7 @@ namespace alive {
 
         }
 
-        void ProfileHandler::registerProfile(ProfileGroup* profile_) {
+        void ProfileHandler::registerProfile(Profile* profile_) {
             profile_->_id = _generateID();
 
             // profile is owned by profile map
@@ -40,7 +40,7 @@ namespace alive {
             if (_debugEnabled) profile_->enableDebug(true);
         }
 
-        void ProfileHandler::unregisterProfile(ProfileGroup* profile_) {
+        void ProfileHandler::unregisterProfile(Profile* profile_) {
             ProfileVector::iterator it;
 
             it = std::find(_profiles.begin(), _profiles.end(), profile_);
@@ -65,7 +65,7 @@ namespace alive {
             _profileMap.erase(profile_->getID());
         }
 
-        ProfileGroup* ProfileHandler::getProfile(const std::string& id_) {
+        Profile* ProfileHandler::getProfile(const std::string& id_) {
             auto it = _profileMap.find(id_);
 
             if (it == _profileMap.end())

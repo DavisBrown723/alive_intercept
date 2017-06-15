@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common\include.hpp"
-#include "profile_group.hpp"
+#include "profile.hpp"
 
 #include <string>
 #include <vector>
@@ -23,9 +23,9 @@ namespace alive {
 
                 using RV = common::RV;
 
-                typedef std::shared_ptr<ProfileGroup> SharedProfilePtr;
+                typedef std::shared_ptr<Profile> SharedProfilePtr;
                 typedef std::unordered_map< std::string , SharedProfilePtr > ProfileMap;
-                typedef std::vector<ProfileGroup*> ProfileVector;
+                typedef std::vector<Profile*> ProfileVector;
 
                 ProfileHandler();
                 ~ProfileHandler();
@@ -48,10 +48,10 @@ namespace alive {
                 // functional
 
 
-                void registerProfile(ProfileGroup* profile_);
-                void unregisterProfile(ProfileGroup* profile_);
+                void registerProfile(Profile* profile_);
+                void unregisterProfile(Profile* profile_);
 
-                ProfileGroup* getProfile(const std::string& id_);
+                Profile* getProfile(const std::string& id_);
 
                 const ProfileVector& getProfiles();
                 const ProfileVector& getProfiles(const intercept::types::side side_);

@@ -19,7 +19,8 @@ namespace alive {
                 extern intercept::types::registered_sqf_function _getProfiles;
                 extern intercept::types::registered_sqf_function _getProfilesBySide;
 
-                extern intercept::types::registered_sqf_function _createProfile;
+                extern intercept::types::registered_sqf_function _createProfileGroup;
+                extern intercept::types::registered_sqf_function _createProfileVehicle;
                 extern intercept::types::registered_sqf_function _getProfilePosition;
                 extern intercept::types::registered_sqf_function _getProfileSpeed;
 
@@ -47,7 +48,8 @@ namespace alive {
 
             // Profiles
 
-            game_value createProfile(game_value profileArgs_);
+            game_value createProfileGroup(game_value profileArgs_);
+            game_value createProfileVehicle(game_value profileArgs_);
             game_value getProfilePosition(game_value profileID_);
             game_value getProfileSpeed(game_value profileID_);
 

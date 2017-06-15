@@ -5,8 +5,7 @@
 #include "profile.hpp"
 #include "profile_unit.hpp"
 #include "profile_waypoint.hpp"
-
-#include "common\include.hpp"
+#include "helpers.hpp"
 
 #include <vector>
 #include <string>
@@ -26,13 +25,35 @@ namespace alive {
 
 
                 ProfileGroup();
-                ProfileGroup(const intercept::types::side side_, const intercept::types::vector3& pos_, const std::vector<std::string>& unitClasses_);
-                ProfileGroup(const intercept::types::side side_, const intercept::types::vector3& pos_, const intercept::types::config& groupConfig_);
+                ProfileGroup(
+                    const intercept::types::side side_,
+                    const std::string& faction_,
+                    const intercept::types::vector3& pos_,
+                    const std::vector<std::string>& unitClasses_
+                );
+
+                ProfileGroup(
+                    const intercept::types::side side_,
+                    const std::string& faction_,
+                    const intercept::types::vector3& pos_,
+                    const intercept::types::config& groupConfig_
+                );
 
                 virtual ~ProfileGroup();
 
-                static ProfileGroup* Create(const intercept::types::side side_, const intercept::types::vector3& pos_, const std::vector<std::string>& unitClasses_);
-                static ProfileGroup* Create(const intercept::types::side side_, const intercept::types::vector3& pos_, const intercept::types::config& groupConfig_);
+                static ProfileGroup* Create(
+                    const intercept::types::side side_,
+                    const std::string& faction_,
+                    const intercept::types::vector3& pos_,
+                    const std::vector<std::string>& unitClasses_
+                );
+
+                static ProfileGroup* Create(
+                    const intercept::types::side side_,
+                    const std::string& faction_,
+                    const intercept::types::vector3& pos_,
+                    const intercept::types::config& groupConfig_
+                );
 
                 
                 // getters
@@ -41,6 +62,8 @@ namespace alive {
                 intercept::types::side getSide()                            { return _side; }
                 std::vector< std::shared_ptr<ProfileUnit> >& getUnits()     { return _units; }
                 std::vector< ProfileWaypoint >& getWaypoints()              { return _waypoints; }
+                ProfileType getProfileType();
+                
 
                 // setters
 
@@ -67,7 +90,6 @@ namespace alive {
                 int _cycleWaypointCount = 0;
                 int _nextUnitID = 0;
 
-                intercept::types::side                      _side;
                 std::vector< std::shared_ptr<ProfileUnit> > _units;
                 std::vector< ProfileWaypoint >              _waypoints;
                 std::vector< ProfileWaypoint >              _waypointsCompleted;

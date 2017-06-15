@@ -7,6 +7,10 @@
 #include "profile_system.hpp"
 #include "profile_handler.hpp"
 
+#include <vector>
+#include <string>
+#include <memory>
+
 
 namespace alive {
     namespace sys_profile {
@@ -14,16 +18,19 @@ namespace alive {
 
         ProfileGroup::ProfileGroup()
             :
-            Profile({ 0,0,0 }),
-            _side(common::RV::get().sides.West)
+            Profile(common::RV::get().sides.West, "BLU_F", { 0,0,0 })
         {
 
         }
 
-        ProfileGroup::ProfileGroup(const intercept::types::side side_, const intercept::types::vector3& pos_, const std::vector<std::string>& unitClasses_)
+        ProfileGroup::ProfileGroup(
+            const intercept::types::side side_,
+            const std::string& faction_,
+            const intercept::types::vector3& pos_,
+            const std::vector<std::string>& unitClasses_
+        )
             :
-            Profile(pos_),
-            _side(side_)
+            Profile(side_, faction_, pos_)
         {
             for (auto& unitClass : unitClasses_)
                 addUnit(new ProfileUnit(unitClass));
@@ -31,10 +38,14 @@ namespace alive {
             _calculateSpeed();
         }
 
-        ProfileGroup::ProfileGroup(const intercept::types::side side_, const intercept::types::vector3& pos_, const intercept::types::config& groupConfig_)
+        ProfileGroup::ProfileGroup(
+            const intercept::types::side side_,
+            const std::string& faction_,
+            const intercept::types::vector3& pos_,
+            const intercept::types::config& groupConfig_
+        )
             :
-            Profile(pos_),
-            _side(side_)
+            Profile(side_, faction_, pos_)
         {
             std::vector<std::string> unitClasses;
 
@@ -62,24 +73,42 @@ namespace alive {
         }
 
         ProfileGroup::~ProfileGroup() {
-            if (_debugEnabled)
-                intercept::sqf::delete_marker(_debugMarker);
+            enableDebug(false);
         }
 
-        ProfileGroup* ProfileGroup::Create(const intercept::types::side side_, const intercept::types::vector3& pos_, const std::vector<std::string>& unitClasses_) {
-            ProfileGroup* profile = new ProfileGroup(side_, pos_, unitClasses_);
+        ProfileGroup* ProfileGroup::Create(
+            const intercept::types::side side_,
+            const std::string& faction_,
+            const intercept::types::vector3& pos_,
+            const std::vector<std::string>& unitClasses_
+        ) {
+            ProfileGroup* profile = new ProfileGroup(side_, faction_, pos_, unitClasses_);
 
             ProfileSystem::get().getProfileHandler().registerProfile(profile);
 
             return profile;
         }
 
-        ProfileGroup* ProfileGroup::Create(const intercept::types::side side_, const intercept::types::vector3& pos_, const intercept::types::config& groupConfig_) {
-            ProfileGroup* profile = new ProfileGroup(side_, pos_, groupConfig_);
+        ProfileGroup* ProfileGroup::Create(
+            const intercept::types::side side_,
+            const std::string& faction_,
+            const intercept::types::vector3& pos_,
+            const intercept::types::config& groupConfig_
+        ) {
+            ProfileGroup* profile = new ProfileGroup(side_, faction_, pos_, groupConfig_);
 
             ProfileSystem::get().getProfileHandler().registerProfile(profile);
 
             return profile;
+        }
+
+        
+        // getters
+
+        ProfileType getProfileType() {
+            return ProfileType::INFANTRY;
+
+            // get profile type based on occupied vehicles
         }
 
 
@@ -212,7 +241,7 @@ namespace alive {
                     if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
             }
 
-            _speed = static_cast<int>(minSpeed * 0.20);
+            _speed = static_cast<int>(minSpeed);
         }
 
         void ProfileGroup::_createDebugMarker() {
@@ -252,6 +281,24 @@ namespace alive {
 
                     int moveDist;
                     bool waypointComplete = false;
+                    int speed;
+
+                    switch (waypoint.speed) {
+                        case ProfileWaypoint::Speed::LIMITED: {
+                            speed = _speed * 0.33f;
+                            break;
+                        }
+                        case ProfileWaypoint::Speed::NORMAL:
+                        {
+                            speed = _speed;
+                            break;
+                        }
+                        case ProfileWaypoint::Speed::FULL:
+                        {
+                            speed = _speed * 1.33f;
+                            break;
+                        }
+                    }
 
                     // determine distance to move
 

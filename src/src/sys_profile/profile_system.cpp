@@ -2,7 +2,7 @@
 
 #include "common\include.hpp"
 #include "core\core.hpp"
-#include "profile_group.hpp"
+#include "profile.hpp"
 #include "sqf_commands.hpp"
 
 #include <algorithm>
@@ -71,7 +71,7 @@ namespace alive {
             std::string profileID = intercept::sqf::get_variable(killed_, "alive_profileID", "");
 
             if (profileID != "") {
-                ProfileGroup* profile = _profileHandler.getProfile(profileID);
+                ProfileGroup* profile = static_cast<ProfileGroup*>(_profileHandler.getProfile(profileID));
 
                 std::string profileUnitID = intercept::sqf::get_variable(killed_, "alive_profileUnitID", "");
 

@@ -16,7 +16,7 @@ namespace alive {
             _speed = static_cast<int>(
                 intercept::sqf::get_number(
                     intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
-                )
+                ) * 0.20
             );
         }
 

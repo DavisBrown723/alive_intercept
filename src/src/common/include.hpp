@@ -8,3 +8,5 @@
 #include "world.hpp"
 
 #include "simulation\include.hpp"
+#include "vehicles\include.hpp"
+#include "allegiance\include.hpp"
