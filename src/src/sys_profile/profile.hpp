@@ -23,13 +23,15 @@ namespace alive {
 
                 // getters
             
-                const std::string& getID() const                { return _id; }
-                const std::string& getFaction() const           { return _faction; }
-                bool debugEnabled() const                       { return _debugEnabled; }
-                bool isActive() const                           { return _active; }
-                int getSpeed() const                            { return _speed; }
-                const intercept::types::side& getSide()         { return _side; }
-                const intercept::types::vector3& getPosition()  { return _pos; }
+                const std::string& getID() const                        { return _id; }
+                const std::string& getFaction() const                   { return _faction; }
+                bool debugEnabled() const                               { return _debugEnabled; }
+                bool isActive() const                                   { return _active; }
+                int getSpeed() const                                    { return _speed; }
+                const intercept::types::side& getSide() const           { return _side; }
+                const intercept::types::vector3& getPosition() const    { return _pos; }
+
+                virtual ProfileType getProfileType() const = 0;
 
                 // setters
 

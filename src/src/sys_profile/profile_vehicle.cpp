@@ -109,15 +109,13 @@ namespace alive {
 
             // remove magazines before setting from stored data
 
-            if (_magsInitialized) {
-                for (auto& mag : sqf::magazines_all_turrets(_vehicleObject)) sqf::remove_magazine_turret(_vehicleObject, mag.name, mag.turret_path);
+            for (auto& mag : sqf::magazines_all_turrets(_vehicleObject)) sqf::remove_magazine_turret(_vehicleObject, mag.name, mag.turret_path);
 
-                // if ammoCount is -1 (default value)
-                // addMagazineTurret will skip it (submit intercept PR)
+            // if ammoCount is -1 (default value)
+            // addMagazineTurret will add full ammo (submit intercept PR)
 
-                for (auto& turretMag : _magazines)
-                    sqf::add_magazine_turret(_vehicleObject, turretMag.name, turretMag.turretPath, turretMag.ammoCount);
-            }
+            for (auto& turretMag : _magazines)
+                sqf::add_magazine_turret(_vehicleObject, turretMag.name, turretMag.turretPath, turretMag.ammoCount);
 
             // spawn complete
 
@@ -144,8 +142,6 @@ namespace alive {
             _magazines.clear();
             for (auto& turretMag : sqf::magazines_all_turrets(_vehicleObject))
                 if (turretMag.count > 0) _magazines.push_back({ turretMag.name, turretMag.turret_path, turretMag.count });
-
-            _magsInitialized = true;
 
             sqf::delete_vehicle(_vehicleObject);
 
@@ -259,13 +255,48 @@ namespace alive {
         }
 
         void ProfileVehicle::_initializeMagazines() {
-            // #TODO: Do this if and when it's needed
-            // initialize _magazines at time of creation
-            // otherwise remains blank until first despawn
+            sqf::config_entry vehicleConfig = sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _vehicleClass;
+
+            // add driver magazines
+
+            types::auto_array<game_value> gameValueMagazines = sqf::get_array(vehicleConfig >> "magazines").to_array();
+            std::vector<std::string> magazines{ gameValueMagazines.begin(),gameValueMagazines.end() };
+
+            for (auto& mag : magazines) _magazines.push_back({ mag , {-1} });
+
+            // add turret magazines
+
+            _addTurretMagsRecurse(vehicleConfig >> "Turrets");
         }
 
         void ProfileVehicle::_addTurretMagsRecurse(sqf::config_entry turretConfig_, std::vector<int> turretPath_) {
+            int count = static_cast<int>(sqf::count(turretConfig_));
 
+            sqf::config_entry turretEntry;
+
+            for (int i = 0; i < count; i++) {
+                turretEntry = sqf::select(turretConfig_, static_cast<float>(i));
+
+                if (sqf::is_class(turretEntry)) {
+                    // construct new path
+                    std::vector<int> path{ turretPath_.begin(),turretPath_.end() };
+                    path.push_back(i);
+
+                    // add magazines
+
+                    types::auto_array<game_value> gameValueMagazines = sqf::get_array(turretEntry >> "magazines").to_array();
+                    std::vector<std::string> magazines{ gameValueMagazines.begin(),gameValueMagazines.end() };
+
+                    for (auto& mag : magazines) _magazines.push_back({ mag , path });
+
+                    // add magazines for sub turrets
+
+                    sqf::config_entry subTurrets = turretConfig_ >> "Turrets";
+
+                    if (sqf::is_class(subTurrets))
+                        _addTurretMagsRecurse(subTurrets, path);
+                }
+            }
         }
 
 

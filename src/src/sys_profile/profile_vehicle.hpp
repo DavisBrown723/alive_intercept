@@ -4,6 +4,7 @@
 
 #include "intercept.hpp"
 #include "common\include.hpp"
+#include "sys_profile\helpers.hpp"
 
 #include <string>
 
@@ -58,6 +59,7 @@ namespace alive {
 
                 const std::vector<HitPoint>& getHitpoints() const       { return _hitpoints; }
                 const std::vector<TurretMagazine>& getMagazines() const { return _magazines; }
+                ProfileType getProfileType() const override             { return ProfileType::VEHICLE; }
 
                 // functional
 
@@ -78,8 +80,6 @@ namespace alive {
                 std::vector<HitPoint> _hitpoints;
                 std::vector<TurretMagazine> _magazines;
 
-                bool _magsInitialized = false;
-
                 common::vehicles::VehicleType _vehicleType;
 
                 intercept::types::object _vehicleObject;
@@ -91,7 +91,7 @@ namespace alive {
 
                 void _initializeHitpoints();
                 void _initializeMagazines();
-                void _addTurretMagsRecurse(intercept::sqf::config_entry turretConfig_, std::vector<int> turretPath_);
+                void _addTurretMagsRecurse(intercept::sqf::config_entry turretConfig_, std::vector<int> turretPath_ = {});
 
         };
         
