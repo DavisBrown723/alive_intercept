@@ -20,7 +20,7 @@ namespace alive {
             ) * 0.20f;
         }
 
-        ProfileUnit::ProfileUnit(ProfileGroup* profile_, const std::string& unitClass_, int health_ )
+        ProfileUnit::ProfileUnit(ProfileGroup* profile_, const std::string& unitClass_, float health_ )
             :
             _unitClass(unitClass_),
             _profile(profile_),

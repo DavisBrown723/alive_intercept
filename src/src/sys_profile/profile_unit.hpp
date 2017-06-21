@@ -24,7 +24,7 @@ namespace alive {
 
 
                 ProfileUnit();
-                ProfileUnit(ProfileGroup* profile_, const std::string& unitClass_, int health_ = 1);
+                ProfileUnit(ProfileGroup* profile_, const std::string& unitClass_, float health_ = 1.f);
                 virtual ~ProfileUnit();
 
 
@@ -39,7 +39,7 @@ namespace alive {
                 ProfileGroup* getGroup() const      { return _profile; }
                 std::string getUnitClass() const    { return _unitClass; }
                 bool isActive() const               { return _active; }
-                int getHealth() const               { return _health; }
+                float getHealth() const             { return _health; }
                 float getSpeed() const              { return _speed; }
 
                 intercept::types::vector3 getPosition() const {

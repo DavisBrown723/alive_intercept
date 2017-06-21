@@ -97,7 +97,7 @@ namespace alive {
 
 
             int spawnDistanceSqr = _spawnDistance * _spawnDistance;
-            int despawnDistanceSqr = spawnDistanceSqr * 1.2;
+            int despawnDistanceSqr = static_cast<int>(spawnDistanceSqr * 1.2);
 
             bool inRange;
             intercept::types::vector3 profilePos;

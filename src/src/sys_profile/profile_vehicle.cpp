@@ -188,9 +188,9 @@ namespace alive {
             // update cargo items
 
             _cargoItems.clear();
-            for (auto& item : sqf::item_cargo(_vehicleObject)) _cargoItems.push_back(item);
-            for (auto& item : sqf::magazine_cargo(_vehicleObject)) _cargoItems.push_back(item);
-            for (auto& item : sqf::weapon_cargo(_vehicleObject)) _cargoItems.push_back(item);
+            common::containers::vectorAppend(_cargoItems, sqf::item_cargo(_vehicleObject));
+            common::containers::vectorAppend(_cargoItems, sqf::magazine_cargo(_vehicleObject));
+            common::containers::vectorAppend(_cargoItems, sqf::weapon_cargo(_vehicleObject));
 
             sqf::delete_vehicle(_vehicleObject);
 
@@ -371,7 +371,7 @@ namespace alive {
                 itemTypePath = configPath >> itemConfigPathName;
 
                 if (sqf::is_class(itemTypePath)) {
-                    itemCount = sqf::count(itemTypePath);
+                    itemCount = static_cast<int>(sqf::count(itemTypePath));
 
                     for (i = 0; i < itemCount; i++) {
                         itemPath = sqf::select(itemTypePath, static_cast<float>(i));
@@ -397,6 +397,7 @@ namespace alive {
                             }
                         }
 
+                        _cargoItems.reserve(countToAdd);
                         for (j = 0; j < countToAdd; j++) _cargoItems.push_back(itemClass);
                     }
                 }
