@@ -24,7 +24,7 @@ namespace alive {
 
 
                 ProfileUnit();
-                ProfileUnit(const std::string& unitClass_, int health_ = 1);
+                ProfileUnit(ProfileGroup* profile_, const std::string& unitClass_, int health_ = 1);
                 virtual ~ProfileUnit();
 
 
@@ -35,13 +35,14 @@ namespace alive {
                 // getters
 
 
-                const std::string& getID()      { return _id; }
-                std::string getUnitClass()      { return _unitClass; }
-                bool isActive()                 { return _active; }
-                int getHealth()                 { return _health; }
-                float getSpeed()                  { return _speed; }
+                const std::string& getID() const    { return _id; }
+                ProfileGroup* getGroup() const      { return _profile; }
+                std::string getUnitClass() const    { return _unitClass; }
+                bool isActive() const               { return _active; }
+                int getHealth() const               { return _health; }
+                float getSpeed() const              { return _speed; }
 
-                intercept::types::vector3 getPosition() {
+                intercept::types::vector3 getPosition() const {
                     if (!_unitObject.is_null())
                         intercept::sqf::get_pos(_unitObject);
                 }
@@ -68,15 +69,18 @@ namespace alive {
                 void getInVehicle(ProfileVehicle* vehicle_);
                 void leaveVehicle();
 
+                void switchGroup(ProfileGroup* profile_);
+
 
             protected:
 
 
                 const std::string _unitClass;
                 std::string _id;
+                ProfileGroup* _profile = nullptr;
 
-                bool _active = false;
-                float _health = 1;
+                bool _active;
+                float _health;
                 float _speed;
 
                 ProfileVehicle* _occupiedVehicle = nullptr;

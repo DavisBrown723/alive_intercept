@@ -35,7 +35,7 @@ namespace alive {
             Profile(side_, faction_, pos_)
         {
             for (auto& unitClass : unitClasses_)
-                addUnit(new ProfileUnit(unitClass));
+                addUnit(new ProfileUnit(this, unitClass));
 
             _calculateSpeed();
         }
@@ -84,7 +84,7 @@ namespace alive {
             // create units
 
             for (auto& unitClass : unitClasses)
-                addUnit(new ProfileUnit(unitClass));
+                addUnit(new ProfileUnit(this, unitClass));
 
             // garrison vehicles
 
@@ -224,6 +224,11 @@ namespace alive {
             _units.push_back(std::shared_ptr<ProfileUnit>(unit_));
 
             unit_->_id = _generateNextUnitID();
+
+            // garrison unit to vehicle if possible
+
+            for (auto& vehicle : _garrisonedVehicles)
+                if (!unit_->isInVehicle() && !vehicle->isFullyGarrisoned()) unit_->getInVehicle(vehicle);
 
             _calculateSpeed();
         }

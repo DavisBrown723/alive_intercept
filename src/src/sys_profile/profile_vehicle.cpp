@@ -121,6 +121,12 @@ namespace alive {
 
             _vehicleObject = sqf::create_vehicle(_vehicleClass, _pos, {}, 0.f, "CAN_COLLIDE");
 
+            // #TODO: Add GetOut eventhandler
+            // checks if unit is profileunit
+            // if the unit's C++ assigned vehicle
+            // is different from in-game assigned vehicle
+            // unseat unit from vehicle
+
             // set vehicle info
 
             sqf::set_dir(_vehicleObject, static_cast<float>(_dir));
@@ -237,7 +243,7 @@ namespace alive {
             sqf::set_marker_size(_debugMarker, types::vector2(0.6f, 0.6f));
 
             if (!_active)
-                sqf::set_marker_alpha(_debugMarker, 0.4f);
+                sqf::set_marker_alpha(_debugMarker, 0.6f);
 
             std::string markerType;
             switch (_vehicleType) {

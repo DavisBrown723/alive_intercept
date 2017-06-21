@@ -20,9 +20,10 @@ namespace alive {
             ) * 0.20f;
         }
 
-        ProfileUnit::ProfileUnit(const std::string& unitClass_, int health_ )
+        ProfileUnit::ProfileUnit(ProfileGroup* profile_, const std::string& unitClass_, int health_ )
             :
             _unitClass(unitClass_),
+            _profile(profile_),
             _active(false),
             _health(health_)
         {
@@ -90,6 +91,18 @@ namespace alive {
             _occupiedVehicle->unseatUnit(this);
 
             _occupiedVehicle = nullptr;
+        }
+
+        void ProfileUnit::switchGroup(ProfileGroup* profile_) {
+            // uninitialize with current group
+
+            this->leaveVehicle();
+
+            _profile->removeUnit(this);
+
+            // initialize with other group
+
+            profile_->addUnit(this);
         }
 
     }
