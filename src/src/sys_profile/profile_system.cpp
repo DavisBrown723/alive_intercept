@@ -25,7 +25,12 @@ namespace alive {
         }
 
         ProfileSystem::~ProfileSystem() {
+            _profileHandler._profilesEast.clear();
+            _profileHandler._profilesWest.clear();
+            _profileHandler._profilesGuer.clear();
 
+            _profileHandler._profiles.clear();
+            _profileHandler._profileMap.clear();
         }
         
         void ProfileSystem::registerScriptCommands() {
@@ -90,26 +95,42 @@ namespace alive {
             // activate profiles within
             // spawn distance of a player
 
+
             int spawnDistanceSqr = _spawnDistance * _spawnDistance;
+            int despawnDistanceSqr = spawnDistanceSqr * 1.2;
 
             bool inRange;
             intercept::types::vector3 profilePos;
 
-            for (auto& profile : ProfileSystem::get().getProfileHandler().getProfiles()) {
-                inRange = false;
+
+            for (auto& profile : _profileHandler._profiles) {
+                if (profile->getProfileType() == ProfileType::VEHICLE && static_cast<ProfileVehicle*>(profile)->isGarrisoned()) continue;
+
                 profilePos = profile->getPosition();
 
                 for (auto& playerPos : playerPositions) {
-                    if (!inRange) {
-                        if (common::math::distanceSqr(playerPos, profilePos) < spawnDistanceSqr)
-                            inRange = true;
+                    if (profile->isActive()) {
+                        inRange = true;
+
+                        if (inRange) {
+                            if (common::math::distanceSqr(playerPos, profilePos) > despawnDistanceSqr) {
+                                inRange = false;
+
+                                profile->despawn();
+                            }
+                        }
+                    } else {
+                        inRange = false;
+
+                        if (!inRange) {
+                            if (common::math::distanceSqr(playerPos, profilePos) < spawnDistanceSqr) {
+                                inRange = true;
+
+                                profile->spawn();
+                            }
+                        }
                     }
                 }
-
-                if (inRange)
-                    profile->spawn();
-                else
-                    if (profile->isActive()) profile->despawn();
             }
         }
 

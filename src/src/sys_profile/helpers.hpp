@@ -2,6 +2,8 @@
 
 #include "common\include.hpp"
 
+#include "profile_unit.hpp"
+
 #include <vector>
 
 
@@ -14,49 +16,44 @@ namespace alive {
 
         inline ProfileVehicleType vehicleTypeToProfileType(common::vehicles::VehicleType vehicleType_) {
             switch (vehicleType_) {
-                case common::vehicles::VehicleType::CAR: {
+                case common::vehicles::VehicleType::CAR:
                     return ProfileVehicleType::MOTORIZED;
-                }
-                case common::vehicles::VehicleType::TRUCK: {
+
+                case common::vehicles::VehicleType::TRUCK:
                     return ProfileVehicleType::MOTORIZED;
-                }
-                case common::vehicles::VehicleType::MECHANIZED: {
+
+                case common::vehicles::VehicleType::MECHANIZED:
                     return ProfileVehicleType::MECHANIZED;
-                }
-                case common::vehicles::VehicleType::TANK: {
+
+                case common::vehicles::VehicleType::TANK:
                     return ProfileVehicleType::ARMORED;
-                }
-                case common::vehicles::VehicleType::ARTILLERY: {
+
+                case common::vehicles::VehicleType::ARTILLERY:
                     return ProfileVehicleType::ARTILLERY;
-                }
-                case common::vehicles::VehicleType::ANTI_AIR: {
+
+                case common::vehicles::VehicleType::ANTI_AIR:
                     return ProfileVehicleType::ANTI_AIR;
-                }
-                case common::vehicles::VehicleType::SHIP: {
+
+                case common::vehicles::VehicleType::SHIP:
                     return ProfileVehicleType::NAVAL;
-                }
-                case common::vehicles::VehicleType::HELICOPTER: {
+
+                case common::vehicles::VehicleType::HELICOPTER:
                     return ProfileVehicleType::HELICOPTER;
-                }
-                case common::vehicles::VehicleType::PLANE: {
+
+                case common::vehicles::VehicleType::PLANE:
                     return ProfileVehicleType::PLANE;
-                }
+
                 case common::vehicles::VehicleType::STATIC_WEAPON:
-                {
                     return ProfileVehicleType::STATIC_WEAPON;
-                }
+
+                default:
+                    return ProfileVehicleType::MOTORIZED;
             }
         }
 
         struct HitPoint {
             std::string name;
             float damage;
-        };
-
-        struct TurretMagazine {
-            std::string name;
-            std::vector<int> turretPath;
-            int ammoCount = -1;
         };
 
 

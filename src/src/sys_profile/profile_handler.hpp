@@ -31,10 +31,18 @@ namespace alive {
                 ~ProfileHandler();
 
 
-                // getters / setters
+                // getters
 
 
-                bool debugEnabled() { return _debugEnabled; }
+                bool debugEnabled() const                           { return _debugEnabled; }
+
+                const ProfileVector& getProfiles() const            { return _profiles; }
+
+                const ProfileVector& getProfiles(const intercept::types::side side_);
+
+
+                // setters
+
 
                 void enableDebug(bool enabled_) {
                     _debugEnabled = enabled_;
@@ -52,9 +60,6 @@ namespace alive {
                 void unregisterProfile(Profile* profile_);
 
                 Profile* getProfile(const std::string& id_);
-
-                const ProfileVector& getProfiles();
-                const ProfileVector& getProfiles(const intercept::types::side side_);
 
 
             protected:

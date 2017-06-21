@@ -27,7 +27,7 @@ namespace alive {
                 const std::string& getFaction() const                   { return _faction; }
                 bool debugEnabled() const                               { return _debugEnabled; }
                 bool isActive() const                                   { return _active; }
-                int getSpeed() const                                    { return _speed; }
+                float getSpeed() const                                  { return _speed; }
                 const intercept::types::side& getSide() const           { return _side; }
                 const intercept::types::vector3& getPosition() const    { return _pos; }
 
@@ -36,7 +36,7 @@ namespace alive {
                 // setters
 
                 void enableDebug(bool enabled_);
-                virtual void setPosition(const intercept::types::vector3& newPos_) { _pos = newPos_; }
+                virtual void setPosition(const intercept::types::vector3& newPos_, bool moveObjects_ = false) { _pos = newPos_; }
 
                 // functional
 
@@ -54,7 +54,7 @@ namespace alive {
                 bool _debugEnabled;
                 bool _active;
 
-                int _speed;
+                float _speed;
 
                 intercept::types::side      _side;
                 intercept::types::vector3   _pos;

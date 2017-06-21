@@ -3,9 +3,10 @@
 #include "intercept.hpp"
 
 #include "profile.hpp"
+#include "profile_vehicle.hpp"
 #include "profile_unit.hpp"
 #include "profile_waypoint.hpp"
-#include "helpers.hpp"
+#include "sys_profile\helpers.hpp"
 
 #include <vector>
 #include <string>
@@ -19,7 +20,6 @@ namespace alive {
         class ProfileGroup : public Profile {
 
             friend class ProfileHandler;
-            friend class ProfileUnit;
 
             public:
 
@@ -59,13 +59,19 @@ namespace alive {
                 // getters
 
 
-                intercept::types::side getSide()                            { return _side; }
-                std::vector< std::shared_ptr<ProfileUnit> >& getUnits()     { return _units; }
-                std::vector< ProfileWaypoint >& getWaypoints()              { return _waypoints; }
-                ProfileType getProfileType();
+                intercept::types::group getGroupObject() const                      { return _groupObject; }
+                intercept::types::side getSide() const                              { return _side; }
+                const std::vector< std::shared_ptr<ProfileUnit> >& getUnits() const { return _units; }
+                const std::vector<ProfileVehicle*>& getGarrisonedVehicles() const   { return _garrisonedVehicles; }
+                const std::vector< ProfileWaypoint >& getWaypoints() const          { return _waypoints; }
+                ProfileType getProfileType() const override                         { return ProfileType::INFANTRY; }
                 
 
                 // setters
+
+
+                virtual void setPosition(const intercept::types::vector3& newPos_, bool moveObjects_ = false) override;
+
 
                 // functional
 
@@ -79,6 +85,10 @@ namespace alive {
                 virtual void removeUnit(ProfileUnit* unit_);
                 virtual void removeUnit(const std::string& unitID_);
 
+                virtual bool garrisonVehicle(ProfileVehicle* vehicle_);
+                virtual bool unGarrisonVehicle(unsigned int index_);
+                virtual bool unGarrisonVehicle(ProfileVehicle* vehicle_);
+
                 virtual int addWaypoint(ProfileWaypoint& wp_);
                 virtual void removeWaypoint(unsigned int index_);
                 virtual void removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_);
@@ -91,8 +101,9 @@ namespace alive {
                 int _nextUnitID = 0;
 
                 std::vector< std::shared_ptr<ProfileUnit> > _units;
-                std::vector< ProfileWaypoint >              _waypoints;
-                std::vector< ProfileWaypoint >              _waypointsCompleted;
+                std::vector<ProfileVehicle*>                _garrisonedVehicles;
+                std::vector<ProfileWaypoint>                _waypoints;
+                std::vector<ProfileWaypoint>                _waypointsCompleted;
                 intercept::types::group                     _groupObject;
 
 

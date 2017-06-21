@@ -11,6 +11,8 @@
 #include <string>
 #include <memory>
 
+using namespace intercept;
+
 
 namespace alive {
     namespace sys_profile {
@@ -24,9 +26,9 @@ namespace alive {
         }
 
         ProfileGroup::ProfileGroup(
-            const intercept::types::side side_,
+            const types::side side_,
             const std::string& faction_,
-            const intercept::types::vector3& pos_,
+            const types::vector3& pos_,
             const std::vector<std::string>& unitClasses_
         )
             :
@@ -39,10 +41,10 @@ namespace alive {
         }
 
         ProfileGroup::ProfileGroup(
-            const intercept::types::side side_,
+            const types::side side_,
             const std::string& faction_,
-            const intercept::types::vector3& pos_,
-            const intercept::types::config& groupConfig_
+            const types::vector3& pos_,
+            const types::config& groupConfig_
         )
             :
             Profile(side_, faction_, pos_)
@@ -51,16 +53,31 @@ namespace alive {
 
             // get unit classes from group config
 
-            int configSize = static_cast<int>(intercept::sqf::count(groupConfig_));
-            intercept::types::config configItem;
-            intercept::sqf::config_entry configEntry;
+            int configSize = static_cast<int>(sqf::count(groupConfig_));
+            types::config configItem;
+            sqf::config_entry configEntry;
+
+            std::vector<ProfileVehicle*> vehiclesToGarrison;
 
             for (int i = 0; i != configSize; i++) {
-                configItem = intercept::sqf::select(groupConfig_, static_cast<float>(i));
+                configItem = sqf::select(groupConfig_, static_cast<float>(i));
 
-                if (intercept::sqf::is_class(configItem)) {
+                if (sqf::is_class(configItem)) {
                     configEntry = configItem;
-                    unitClasses.push_back(intercept::sqf::get_text(configEntry >> "vehicle"));
+                    std::string unitClass = sqf::get_text(configEntry >> "vehicle");
+
+                    if (sqf::is_kind_of(unitClass, "Man")) {
+                        // add unit to profile
+
+                        unitClasses.push_back(sqf::get_text(configEntry >> "vehicle"));
+                    } else {
+                        // create vehicle profile
+                        // link to this profile
+
+                        auto vehicleProfile = ProfileVehicle::Create(side_, faction_, pos_, sqf::get_text(configEntry >> "vehicle"));
+
+                        vehiclesToGarrison.push_back(vehicleProfile);
+                    }
                 }
             }
 
@@ -68,6 +85,11 @@ namespace alive {
 
             for (auto& unitClass : unitClasses)
                 addUnit(new ProfileUnit(unitClass));
+
+            // garrison vehicles
+
+            for (auto& vehicle : vehiclesToGarrison)
+                this->garrisonVehicle(vehicle);
 
             _calculateSpeed();
         }
@@ -77,9 +99,9 @@ namespace alive {
         }
 
         ProfileGroup* ProfileGroup::Create(
-            const intercept::types::side side_,
+            const types::side side_,
             const std::string& faction_,
-            const intercept::types::vector3& pos_,
+            const types::vector3& pos_,
             const std::vector<std::string>& unitClasses_
         ) {
             ProfileGroup* profile = new ProfileGroup(side_, faction_, pos_, unitClasses_);
@@ -90,10 +112,10 @@ namespace alive {
         }
 
         ProfileGroup* ProfileGroup::Create(
-            const intercept::types::side side_,
+            const types::side side_,
             const std::string& faction_,
-            const intercept::types::vector3& pos_,
-            const intercept::types::config& groupConfig_
+            const types::vector3& pos_,
+            const types::config& groupConfig_
         ) {
             ProfileGroup* profile = new ProfileGroup(side_, faction_, pos_, groupConfig_);
 
@@ -105,10 +127,27 @@ namespace alive {
         
         // getters
 
-        ProfileType getProfileType() {
-            return ProfileType::INFANTRY;
+        
+        // setters
 
-            // get profile type based on occupied vehicles
+
+        void ProfileGroup::setPosition(const intercept::types::vector3& newPos_, bool moveObjects_) {
+            _pos = newPos_;
+
+            // move garrisoned vehicles
+            // #TODO: Improve
+
+            if (_pos.z > 2)
+                sqf::system_chat("SENDING ABOVE ZERO");
+
+            for (auto& unit : _units)
+                if (unit->isInVehicle()) unit->getOccupiedVehicle()->setPosition(_pos, moveObjects_);
+
+            if (moveObjects_ && _active)
+                for (auto& unit : _units) sqf::set_pos(unit->_unitObject, newPos_);
+
+            if (_debugEnabled)
+                sqf::set_marker_pos(_debugMarker, newPos_);
         }
 
 
@@ -117,22 +156,26 @@ namespace alive {
 
         void ProfileGroup::update(const float dt_) {
             _updateMovement(dt_);
-
-            if (_debugEnabled)
-                intercept::sqf::set_marker_pos(_debugMarker, _pos);
         }
 
         void ProfileGroup::spawn() {
             if (_active)
                 return;
 
-            _groupObject = intercept::sqf::create_group(_side);
+            // spawn garrisoned vehicles first
+
+            for (auto& vehicle : _garrisonedVehicles)
+                vehicle->spawn();
+
+            // spawn this profile
+
+            _groupObject = sqf::create_group(_side);
 
             for (auto& unit : _units)
                 unit->spawn(this);
 
             if (_debugEnabled)
-                intercept::sqf::set_marker_alpha(_debugMarker, 1.f);
+                sqf::set_marker_alpha(_debugMarker, 1.f);
 
             // ProfileWaypoints to real waypoints
 
@@ -148,7 +191,7 @@ namespace alive {
 
             // real waypoints to profile waypoints
 
-            auto groupWaypoints = intercept::sqf::waypoints(_groupObject);
+            auto groupWaypoints = sqf::waypoints(_groupObject);
 
             // update profile waypoints
             // with any waypoints added
@@ -157,17 +200,22 @@ namespace alive {
             if (_waypoints.size() != groupWaypoints.size()) {
                 _waypoints.clear();
 
-                for (int i = static_cast<int>(intercept::sqf::current_waypoint(_groupObject)); i != groupWaypoints.size(); i++)
+                for (int i = static_cast<int>(sqf::current_waypoint(_groupObject)); i != groupWaypoints.size(); i++)
                     _waypoints.push_back(ProfileWaypoint(groupWaypoints[i]));
             }
 
             for (auto& unit : _units)
                 unit->despawn();
 
-            intercept::sqf::delete_group(_groupObject);
+            sqf::delete_group(_groupObject);
+
+            // despawn garrisoned vehicles
+
+            for (auto& vehicle : _garrisonedVehicles)
+                vehicle->despawn();
 
             if (_debugEnabled)
-                intercept::sqf::set_marker_alpha(_debugMarker, 0.3f);
+                sqf::set_marker_alpha(_debugMarker, 0.3f);
 
             _active = false;
         }
@@ -197,6 +245,48 @@ namespace alive {
                     return;
                 }
             }
+
+            _calculateSpeed();
+        }
+
+        bool ProfileGroup::garrisonVehicle(ProfileVehicle* vehicle_) {
+            if (_garrisonedVehicles.size() + 1 >= _units.size() || vehicle_->isGarrisoned())
+                return false;
+
+            _garrisonedVehicles.push_back(vehicle_);
+
+            auto it = _units.begin();
+
+            while (it != _units.end()) {
+                if (!(*it)->isInVehicle()) (*it)->getInVehicle(vehicle_);
+                it++;
+            }
+
+            _calculateSpeed();
+
+            return true;
+        }
+
+        bool ProfileGroup::unGarrisonVehicle(unsigned int index_) {
+            if (index_ >= _garrisonedVehicles.size())
+                return false;
+
+            _garrisonedVehicles.erase(_garrisonedVehicles.begin() + index_);
+
+            _calculateSpeed();
+
+            return true;
+        }
+
+        bool ProfileGroup::unGarrisonVehicle(ProfileVehicle* vehicle_) {
+            auto it = std::find(_garrisonedVehicles.begin(), _garrisonedVehicles.end(), vehicle_);
+
+            if (it != _garrisonedVehicles.end()) {
+                unGarrisonVehicle(it - _garrisonedVehicles.begin());
+                return true;
+            }
+
+            return false;
         }
 
         int ProfileGroup::addWaypoint(ProfileWaypoint& wp_) {
@@ -232,36 +322,47 @@ namespace alive {
         }
 
         void ProfileGroup::_calculateSpeed() {
-            int minSpeed = 0;
+            float minSpeed;
 
-            if (_units.size() > 0) {
-                minSpeed = _units[0]->getSpeed();
+            bool allUnitsGarrisoned = true;
 
-                for (auto& unit : _units)
-                    if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
+            for (auto& unit : _units) if (!unit->isInVehicle()) allUnitsGarrisoned = false;
+
+            if (allUnitsGarrisoned) {
+                minSpeed = _garrisonedVehicles[0]->getSpeed();
+
+                for(auto& vehicle : _garrisonedVehicles)
+                    if (vehicle->getSpeed() < minSpeed) minSpeed = vehicle->getSpeed();
+            } else {
+                if (_units.size() > 0) {
+                    minSpeed = _units[0]->getSpeed();
+
+                    for (auto& unit : _units)
+                        if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
+                }
             }
 
-            _speed = static_cast<int>(minSpeed);
+            _speed = minSpeed;
         }
 
         void ProfileGroup::_createDebugMarker() {
-            _debugMarker = intercept::sqf::create_marker(_id + "_debug", _pos);
+            _debugMarker = sqf::create_marker(_id + "_debug", _pos);
 
-            intercept::sqf::set_marker_pos(_debugMarker, _pos);
-            intercept::sqf::set_marker_size(_debugMarker, intercept::types::vector2(0.6f, 0.6f));
+            sqf::set_marker_pos(_debugMarker, _pos);
+            sqf::set_marker_size(_debugMarker, types::vector2(0.6f, 0.6f));
 
             if (!_active)
-                intercept::sqf::set_marker_alpha(_debugMarker, 0.3f);
+                sqf::set_marker_alpha(_debugMarker, 0.3f);
 
             if (_side == common::RV::get().sides.East) {
-                intercept::sqf::set_marker_color(_debugMarker, "ColorRed");
-                intercept::sqf::set_marker_type(_debugMarker, "o_inf");
+                sqf::set_marker_color(_debugMarker, "ColorRed");
+                sqf::set_marker_type(_debugMarker, "o_inf");
             } else if (_side == common::RV::get().sides.West) {
-                intercept::sqf::set_marker_color(_debugMarker, "ColorBlue");
-                intercept::sqf::set_marker_type(_debugMarker, "b_inf");
+                sqf::set_marker_color(_debugMarker, "ColorBlue");
+                sqf::set_marker_type(_debugMarker, "b_inf");
             } else if (_side == common::RV::get().sides.Guer) {
-                intercept::sqf::set_marker_color(_debugMarker, "ColorGreen");
-                intercept::sqf::set_marker_type(_debugMarker, "n_inf");
+                sqf::set_marker_color(_debugMarker, "ColorGreen");
+                sqf::set_marker_type(_debugMarker, "n_inf");
             }
         }
 
@@ -279,12 +380,13 @@ namespace alive {
                         return;
                     }
 
-                    int moveDist;
+                    float moveDist;
                     bool waypointComplete = false;
-                    int speed;
+                    float speed;
 
                     switch (waypoint.speed) {
-                        case ProfileWaypoint::Speed::LIMITED: {
+                        case ProfileWaypoint::Speed::LIMITED:
+                        {
                             speed = _speed * 0.33f;
                             break;
                         }
@@ -298,23 +400,30 @@ namespace alive {
                             speed = _speed * 1.33f;
                             break;
                         }
+                        case ProfileWaypoint::Speed::UNCHANGED:
+                        {
+                            speed = _speed;
+                        }
                     }
 
                     // determine distance to move
 
-                    if (_speed < distToCompletion) {
-                        moveDist = _speed;
+                    if (speed < distToCompletion) {
+                        moveDist = speed;
                     } else {
-                        moveDist = distToCompletion;
+                        moveDist = static_cast<float>(distToCompletion);
                         waypointComplete = true;
                     }
 
                     // move profile
 
-                    intercept::types::vector3 newPos = common::math::lerp(
+                    for (auto& vehicle : _garrisonedVehicles)
+                        if (vehicle->getDir() == 0) vehicle->setDir(common::world::getRelDir(_pos, waypoint.position));
+
+                    types::vector3 newPos = common::math::lerp(
                         _pos,
                         waypoint.position,
-                        static_cast<float>(moveDist) * dt_ / static_cast<float>(distToCompletion)
+                        moveDist * dt_ / static_cast<float>(distToCompletion)
                     );
 
                     this->setPosition(newPos);
@@ -338,10 +447,13 @@ namespace alive {
             } else {
                 // profile is spawned
 
-                intercept::types::object leader = intercept::sqf::leader(_groupObject);
+                types::object leader = sqf::leader(_groupObject);
+
+                intercept::types::vector3 pos = sqf::get_pos_atl(leader);
+                pos.z = 0;
 
                 if (!leader.is_null())
-                    this->setPosition(intercept::sqf::get_pos(leader));
+                    this->setPosition(pos);
             }
         }
 

@@ -2,6 +2,8 @@
 
 #include "profile_group.hpp"
 
+using namespace intercept;
+
 
 namespace alive {
     namespace sys_profile {
@@ -13,11 +15,9 @@ namespace alive {
             _active(false),
             _health(1)
         {
-            _speed = static_cast<int>(
-                intercept::sqf::get_number(
-                    intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
-                ) * 0.20
-            );
+            _speed = sqf::get_number(
+                    sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
+            ) * 0.20f;
         }
 
         ProfileUnit::ProfileUnit(const std::string& unitClass_, int health_ )
@@ -26,16 +26,17 @@ namespace alive {
             _active(false),
             _health(health_)
         {
-            _speed = static_cast<int>(
-                intercept::sqf::get_number(
-                    intercept::sqf::config_entry(intercept::sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
-                )
-            );
+            _speed = sqf::get_number(
+                sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _unitClass >> "maxSpeed"
+            ) * 0.20f;
         }
 
         ProfileUnit::~ProfileUnit() {
-            if (intercept::sqf::is_null(_unitObject))
-                intercept::sqf::delete_vehicle(_unitObject);
+            if (sqf::is_null(_unitObject))
+                sqf::delete_vehicle(_unitObject);
+
+            if (_occupiedVehicle != nullptr)
+                leaveVehicle();
         }
 
 
@@ -46,31 +47,49 @@ namespace alive {
             if (_active)
                 return;
 
-            if (!intercept::sqf::is_null(_unitObject))
-                intercept::sqf::delete_vehicle(_unitObject);
+            if (!sqf::is_null(_unitObject))
+                sqf::delete_vehicle(_unitObject);
 
-            _unitObject = intercept::sqf::create_unit(profile_->_groupObject, _unitClass, profile_->getPosition());
+            _unitObject = sqf::create_unit(profile_->getGroupObject(), _unitClass, profile_->getPosition(), {}, 0.f, "FORM");
             
             // apply profile information to unit
 
-            intercept::sqf::set_variable(_unitObject, "alive_profileID", profile_->getID());
-            intercept::sqf::set_variable(_unitObject, "alive_profileUnitID", game_value(_id));
-            intercept::sqf::set_damage(_unitObject, static_cast<float>(1 - _health), false);
+            sqf::set_variable(_unitObject, "alive_profileID", profile_->getID());
+            sqf::set_variable(_unitObject, "alive_profileUnitID", _id);
+            sqf::set_damage(_unitObject, 1.f - _health, false);
+
+            if (_occupiedVehicle != nullptr)
+                sqf::move_in_any(_unitObject, _occupiedVehicle->getVehicleObject());
 
             _active = true;
         }
 
         void ProfileUnit::despawn() {
-            if (!_active || intercept::sqf::is_null(_unitObject))
+            if (!_active || sqf::is_null(_unitObject))
                 return;
 
             // update information
 
-            _health = 1 - static_cast<int>(intercept::sqf::damage(_unitObject));
+            _health = 1.f - sqf::damage(_unitObject);
 
-            intercept::sqf::delete_vehicle(_unitObject);
+            sqf::delete_vehicle(_unitObject);
 
             _active = false;
+        }
+
+        void ProfileUnit::getInVehicle(ProfileVehicle* vehicle_) {
+            if (_occupiedVehicle != nullptr)
+                return;
+
+            vehicle_->seatUnit(this);
+
+            _occupiedVehicle = vehicle_;
+        }
+
+        void ProfileUnit::leaveVehicle() {
+            _occupiedVehicle->unseatUnit(this);
+
+            _occupiedVehicle = nullptr;
         }
 
     }

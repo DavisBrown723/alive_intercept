@@ -74,10 +74,6 @@ namespace alive {
             return it->second.get();
         }
 
-        const ProfileHandler::ProfileVector& ProfileHandler::getProfiles() {            
-            return _profiles;
-        }
-
         const ProfileHandler::ProfileVector& ProfileHandler::getProfiles(const intercept::types::side side_) {
             if (side_ == RV::get().sides.East)
                 return _profilesEast;

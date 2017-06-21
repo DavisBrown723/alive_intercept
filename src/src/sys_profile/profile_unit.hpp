@@ -2,6 +2,8 @@
 
 #include "intercept.hpp"
 
+#include "common\include.hpp"
+
 #include <string>
 
 
@@ -26,21 +28,33 @@ namespace alive {
                 virtual ~ProfileUnit();
 
 
-                // getters / setters
+                // setters
 
 
-                const std::string& getID() { return _id; }
-                std::string getUnitClass() { return _unitClass; }
-                bool isActive() { return _active; }
-                int getHealth() { return _health; }
-                int getSpeed() { return _speed; }
+
+                // getters
+
+
+                const std::string& getID()      { return _id; }
+                std::string getUnitClass()      { return _unitClass; }
+                bool isActive()                 { return _active; }
+                int getHealth()                 { return _health; }
+                float getSpeed()                  { return _speed; }
+
                 intercept::types::vector3 getPosition() {
                     if (!_unitObject.is_null())
                         intercept::sqf::get_pos(_unitObject);
                 }
 
+                bool isInVehicle() const                    { return _occupiedVehicle != nullptr; }
+                ProfileVehicle* getOccupiedVehicle() const  { return _occupiedVehicle; }
+
+
+                // setters
+
+
                 void setPosition(const intercept::types::vector3& pos_) {
-                    if (!_unitObject.is_null())
+                    if (!_unitObject.is_null() && _occupiedVehicle == nullptr)
                         intercept::sqf::set_pos(_unitObject, pos_);
                 }
 
@@ -51,6 +65,9 @@ namespace alive {
                 virtual void spawn(ProfileGroup* profile_);
                 virtual void despawn();
 
+                void getInVehicle(ProfileVehicle* vehicle_);
+                void leaveVehicle();
+
 
             protected:
 
@@ -59,8 +76,10 @@ namespace alive {
                 std::string _id;
 
                 bool _active = false;
-                int _health = 1;
-                int _speed;
+                float _health = 1;
+                float _speed;
+
+                ProfileVehicle* _occupiedVehicle = nullptr;
 
                 intercept::types::object _unitObject;
 

@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using namespace intercept;
 
@@ -42,6 +43,7 @@ namespace alive {
             _calculateSpeed();
             _initializeHitpoints();
             _initializeMagazines();
+            _initializeSeats();
         }
 
         ProfileVehicle::ProfileVehicle(
@@ -52,17 +54,24 @@ namespace alive {
         )
             :
             Profile(side_, faction_, pos_),
-            _vehicleClass(sqf::get_text(sqf::config_entry(_vehicleConfig)))
+            _vehicleClass(sqf::config_name(_vehicleConfig)),
+            _dir(0),
+            _fuel(1.f),
+            _engineOn(false)
         {
             _vehicleType = common::vehicles::getVehicleType(_vehicleClass);
 
             _calculateSpeed();
             _initializeHitpoints();
             _initializeMagazines();
+            _initializeSeats();
         }
 
         ProfileVehicle::~ProfileVehicle() {
             enableDebug(false);
+
+            for (auto& unit : _garrisonedUnits)
+                unit->leaveVehicle();
         }
 
         ProfileVehicle* ProfileVehicle::Create(
@@ -90,6 +99,27 @@ namespace alive {
 
             return profile;
         }
+
+        
+        // getters
+
+
+        // setters
+
+
+        void ProfileVehicle::setPosition(const intercept::types::vector3& newPos_, bool moveObjects_) {
+            _pos = newPos_;
+
+            if (moveObjects_ && _active)
+                sqf::set_pos(_vehicleObject, newPos_);
+
+            if (_debugEnabled)
+                sqf::set_marker_pos(_debugMarker, newPos_);
+        }
+
+        
+        // functional
+
 
         void ProfileVehicle::spawn() {
             if (_active)
@@ -157,16 +187,34 @@ namespace alive {
 
         }
 
+        bool ProfileVehicle::seatUnit(ProfileUnit* unit_) {
+            if (_seatsLeft == 0)
+                return false;
+
+            _garrisonedUnits.push_back(unit_);
+
+            _seatsLeft--;
+
+            return true;
+        }
+
+        void ProfileVehicle::unseatUnit(ProfileUnit* unit_) {
+            auto it = std::find(_garrisonedUnits.begin(), _garrisonedUnits.end(), unit_);
+            
+            if (it != _garrisonedUnits.end())
+                _garrisonedUnits.erase(it);
+
+            _seatsLeft++;
+        }
+
 
         // protected
 
 
         void ProfileVehicle::_calculateSpeed() {
-            _speed = static_cast<int>(
-                sqf::get_number(
-                    sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _vehicleClass >> "maxSpeed"
-                ) * 0.20
-            );
+            _speed = sqf::get_number(
+                sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _vehicleClass >> "maxSpeed"
+            ) * 0.20f;
         }
 
         void ProfileVehicle::_createDebugMarker() {
@@ -176,7 +224,7 @@ namespace alive {
             sqf::set_marker_size(_debugMarker, types::vector2(0.6f, 0.6f));
 
             if (!_active)
-                sqf::set_marker_alpha(_debugMarker, 0.3f);
+                sqf::set_marker_alpha(_debugMarker, 0.4f);
 
             std::string markerType;
             switch (_vehicleType) {
@@ -255,48 +303,28 @@ namespace alive {
         }
 
         void ProfileVehicle::_initializeMagazines() {
-            sqf::config_entry vehicleConfig = sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _vehicleClass;
+            std::vector<common::vehicles::TurretMagazine> turretMags = common::vehicles::getVehicleTurretMagazines(_vehicleClass);
 
-            // add driver magazines
-
-            types::auto_array<game_value> gameValueMagazines = sqf::get_array(vehicleConfig >> "magazines").to_array();
-            std::vector<std::string> magazines{ gameValueMagazines.begin(),gameValueMagazines.end() };
-
-            for (auto& mag : magazines) _magazines.push_back({ mag , {-1} });
-
-            // add turret magazines
-
-            _addTurretMagsRecurse(vehicleConfig >> "Turrets");
+            for (auto& mag : turretMags)
+                _magazines.push_back({ mag.name,mag.turretPath });
         }
 
-        void ProfileVehicle::_addTurretMagsRecurse(sqf::config_entry turretConfig_, std::vector<int> turretPath_) {
-            int count = static_cast<int>(sqf::count(turretConfig_));
+        void ProfileVehicle::_initializeSeats() {
+            auto positions = common::vehicles::getVehiclePositions(_vehicleClass);
 
-            sqf::config_entry turretEntry;
+            if (positions.Driver.isSeat)
+                _seatCount++;
 
-            for (int i = 0; i < count; i++) {
-                turretEntry = sqf::select(turretConfig_, static_cast<float>(i));
+            if (positions.Gunner.isSeat)
+                _seatCount++;
 
-                if (sqf::is_class(turretEntry)) {
-                    // construct new path
-                    std::vector<int> path{ turretPath_.begin(),turretPath_.end() };
-                    path.push_back(i);
+            if (positions.Commander.isSeat)
+                _seatCount++;
 
-                    // add magazines
+            _seatCount += positions.Turrets.size();
+            _seatCount += positions.Cargo.size();
 
-                    types::auto_array<game_value> gameValueMagazines = sqf::get_array(turretEntry >> "magazines").to_array();
-                    std::vector<std::string> magazines{ gameValueMagazines.begin(),gameValueMagazines.end() };
-
-                    for (auto& mag : magazines) _magazines.push_back({ mag , path });
-
-                    // add magazines for sub turrets
-
-                    sqf::config_entry subTurrets = turretConfig_ >> "Turrets";
-
-                    if (sqf::is_class(subTurrets))
-                        _addTurretMagsRecurse(subTurrets, path);
-                }
-            }
+            _seatsLeft = _seatCount;
         }
 
 
