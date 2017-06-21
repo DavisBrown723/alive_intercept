@@ -103,6 +103,7 @@ namespace alive {
 
                 std::vector<HitPoint> _hitpoints;
                 std::vector<common::vehicles::TurretMagazine> _magazines;
+                std::vector<std::string> _cargoItems;
 
                 int _seatCount = 0;
                 int _seatsLeft = 0;
@@ -116,9 +117,11 @@ namespace alive {
                 virtual void _calculateSpeed() override;
                 virtual void _createDebugMarker() override;
 
+                void _initialize();
                 void _initializeHitpoints();
                 void _initializeMagazines();
                 void _initializeSeats();
+                void _initializeCargoItems();
 
         };
         

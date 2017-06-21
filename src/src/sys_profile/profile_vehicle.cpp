@@ -40,10 +40,7 @@ namespace alive {
         {
             _vehicleType = common::vehicles::getVehicleType(_vehicleClass);
 
-            _calculateSpeed();
-            _initializeHitpoints();
-            _initializeMagazines();
-            _initializeSeats();
+            _initialize();
         }
 
         ProfileVehicle::ProfileVehicle(
@@ -61,10 +58,7 @@ namespace alive {
         {
             _vehicleType = common::vehicles::getVehicleType(_vehicleClass);
 
-            _calculateSpeed();
-            _initializeHitpoints();
-            _initializeMagazines();
-            _initializeSeats();
+            _initialize();
         }
 
         ProfileVehicle::~ProfileVehicle() {
@@ -147,6 +141,14 @@ namespace alive {
             for (auto& turretMag : _magazines)
                 sqf::add_magazine_turret(_vehicleObject, turretMag.name, turretMag.turretPath, turretMag.ammoCount);
 
+            // set cargo items
+
+            sqf::clear_item_cargo_global(_vehicleObject);
+            sqf::clear_magazine_cargo_global(_vehicleObject);
+            sqf::clear_weapon_cargo_global(_vehicleObject);
+
+            for (auto& item : _cargoItems) sqf::add_item_cargo_global(_vehicleObject, item, 1);
+
             // spawn complete
 
             if (_debugEnabled)
@@ -165,13 +167,24 @@ namespace alive {
             _fuel = sqf::fuel(_vehicleObject);
             _engineOn = sqf::is_engine_on(_vehicleObject);
 
+            // update hitpoints
+
             for (auto& hitpoint : _hitpoints) {
                 hitpoint.damage = sqf::get_hit_point_damage(_vehicleObject, hitpoint.name);
             }
 
+            // update magazines
+
             _magazines.clear();
             for (auto& turretMag : sqf::magazines_all_turrets(_vehicleObject))
                 if (turretMag.count > 0) _magazines.push_back({ turretMag.name, turretMag.turret_path, turretMag.count });
+
+            // update cargo items
+
+            _cargoItems.clear();
+            for (auto& item : sqf::item_cargo(_vehicleObject)) _cargoItems.push_back(item);
+            for (auto& item : sqf::magazine_cargo(_vehicleObject)) _cargoItems.push_back(item);
+            for (auto& item : sqf::weapon_cargo(_vehicleObject)) _cargoItems.push_back(item);
 
             sqf::delete_vehicle(_vehicleObject);
 
@@ -287,6 +300,14 @@ namespace alive {
                 sqf::set_marker_color(_debugMarker, "ColorYellow");
         }
 
+        void ProfileVehicle::_initialize() {
+            _initializeHitpoints();
+            _initializeMagazines();
+            _initializeSeats();
+            _initializeCargoItems();
+            _calculateSpeed();
+        }
+
         void ProfileVehicle::_initializeHitpoints() {
             sqf::config_entry configPath = sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _vehicleClass >> "HitPoints";
 
@@ -325,6 +346,57 @@ namespace alive {
             _seatCount += positions.Cargo.size();
 
             _seatsLeft = _seatCount;
+        }
+
+        void ProfileVehicle::_initializeCargoItems() {
+            sqf::config_entry configPath = sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> _vehicleClass;
+
+            int itemTypeIndex = 0;
+            sqf::config_entry itemTypePath;
+            sqf::config_entry itemPath;
+            int itemCount;
+
+            int countToAdd;
+            std::string itemClass;
+            int i;
+            int j;
+
+            for (auto& itemConfigPathName : { "TransportItems" ,"TransportMagazines" ,"TransportWeapons" ,"TransportBackpacks" }) {
+                itemTypePath = configPath >> itemConfigPathName;
+
+                if (sqf::is_class(itemTypePath)) {
+                    itemCount = sqf::count(itemTypePath);
+
+                    for (i = 0; i < itemCount; i++) {
+                        itemPath = sqf::select(itemTypePath, static_cast<float>(i));
+
+                        countToAdd = static_cast<int>(sqf::get_number(itemPath >> "count"));
+
+                        switch (itemTypeIndex) {
+                            case 0: {
+                                itemClass = sqf::get_text(itemPath >> "name");
+                                break;
+                            }
+                            case 1: {
+                                itemClass = sqf::get_text(itemPath >> "magazine");
+                                break;
+                            }
+                            case 2: {
+                                itemClass = sqf::get_text(itemPath >> "weapon");
+                                break;
+                            }
+                            case 3: {
+                                itemClass = sqf::get_text(itemPath >> "backpack");
+                                break;
+                            }
+                        }
+
+                        for (j = 0; j < countToAdd; j++) _cargoItems.push_back(itemClass);
+                    }
+                }
+
+                itemTypeIndex++;
+            }
         }
 
 
