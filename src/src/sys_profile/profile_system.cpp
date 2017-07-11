@@ -76,11 +76,18 @@ namespace alive {
             std::string profileID = intercept::sqf::get_variable(killed_, "alive_profileID", "");
 
             if (profileID != "") {
-                ProfileGroup* profile = static_cast<ProfileGroup*>(_profileHandler.getProfile(profileID));
 
-                std::string profileUnitID = intercept::sqf::get_variable(killed_, "alive_profileUnitID", "");
+                if (intercept::sqf::is_kind_of(intercept::sqf::type_of(killed_), "Man")) {
+                    ProfileGroup* profile = static_cast<ProfileGroup*>(_profileHandler.getProfile(profileID));
 
-                profile->removeUnit(profileUnitID);
+                    std::string profileUnitID = intercept::sqf::get_variable(killed_, "alive_profileUnitID", "");
+
+                    profile->removeUnit(profileUnitID);
+                } else {
+                    ProfileVehicle* profile = static_cast<ProfileVehicle*>(_profileHandler.getProfile(profileID));
+
+                    ProfileSystem::get().getProfileHandler().unregisterProfile(profile);
+                }
             }
         }
 

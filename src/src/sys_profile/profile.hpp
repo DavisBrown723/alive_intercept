@@ -44,6 +44,8 @@ namespace alive {
                 virtual void despawn() = 0;
                 virtual void update(const float dt_) = 0;
 
+                virtual void onKilled() {}
+
 
             protected:
 

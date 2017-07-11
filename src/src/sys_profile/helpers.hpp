@@ -2,13 +2,18 @@
 
 #include "common\include.hpp"
 
-#include "profile_unit.hpp"
-
 #include <vector>
+
+// helper includes
+
+#include "sys_profile\helpers\group_vehicle_assignment.hpp"
 
 
 namespace alive {
     namespace sys_profile {
+
+        class ProfileVehicle;
+        class ProfileUnit;
 
 
         enum class ProfileType { INFANTRY , VEHICLE };

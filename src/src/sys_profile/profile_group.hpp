@@ -2,24 +2,26 @@
 
 #include "intercept.hpp"
 
+#include "sys_profile\helpers.hpp"
+
 #include "profile.hpp"
 #include "profile_vehicle.hpp"
 #include "profile_unit.hpp"
 #include "profile_waypoint.hpp"
-#include "sys_profile\helpers.hpp"
 
 #include <vector>
 #include <string>
 #include <memory>
 
-
 namespace alive {
     namespace sys_profile {
+
 
 
         class ProfileGroup : public Profile {
 
             friend class ProfileHandler;
+            friend class GroupVehicleAssignment;
 
             public:
 
@@ -59,12 +61,14 @@ namespace alive {
                 // getters
 
 
-                intercept::types::group getGroupObject() const                      { return _groupObject; }
-                intercept::types::side getSide() const                              { return _side; }
-                const std::vector< std::shared_ptr<ProfileUnit> >& getUnits() const { return _units; }
-                const std::vector<ProfileVehicle*>& getGarrisonedVehicles() const   { return _garrisonedVehicles; }
-                const std::vector< ProfileWaypoint >& getWaypoints() const          { return _waypoints; }
-                ProfileType getProfileType() const override                         { return ProfileType::INFANTRY; }
+                intercept::types::group getGroupObject() const                              { return _groupObject; }
+                intercept::types::side getSide() const                                      { return _side; }
+                const std::vector< std::shared_ptr<ProfileUnit> >& getUnits()const          { return _units; }
+                const std::vector<GroupVehicleAssignment*>& getVehicleAssignments() const   { return _vehicleAssignments; }
+                const std::vector< ProfileWaypoint >& getWaypoints() const                  { return _waypoints; }
+                ProfileType getProfileType() const override                                 { return ProfileType::INFANTRY; }
+
+                ProfileUnit* getUnit(const std::string& id_);
                 
 
                 // setters
@@ -87,11 +91,15 @@ namespace alive {
 
                 virtual bool garrisonVehicle(ProfileVehicle* vehicle_);
                 virtual bool unGarrisonVehicle(unsigned int index_);
+                virtual bool unGarrisonVehicle(GroupVehicleAssignment* assignment_);
                 virtual bool unGarrisonVehicle(ProfileVehicle* vehicle_);
+                virtual GroupVehicleAssignment* getVehicleAssignment(ProfileVehicle* vehicle_);
 
                 virtual int addWaypoint(ProfileWaypoint& wp_);
                 virtual void removeWaypoint(unsigned int index_);
                 virtual void removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_);
+
+                void onUnitLeftAssignedVehicle(ProfileUnit* unit_, ProfileVehicle* vehicle_);
 
 
             protected:
@@ -101,10 +109,15 @@ namespace alive {
                 int _nextUnitID = 0;
 
                 std::vector< std::shared_ptr<ProfileUnit> > _units;
-                std::vector<ProfileVehicle*>                _garrisonedVehicles;
+                std::vector<GroupVehicleAssignment*>         _vehicleAssignments;
                 std::vector<ProfileWaypoint>                _waypoints;
                 std::vector<ProfileWaypoint>                _waypointsCompleted;
                 intercept::types::group                     _groupObject;
+
+                bool _controlsHelicopter = false;
+                bool _controlsPlane = false;
+
+                bool _ungarrisonStarted = false;
 
 
                 // functions

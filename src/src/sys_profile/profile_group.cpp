@@ -1,6 +1,8 @@
+#include "profile_group.hpp"
+
 #include "intercept.hpp"
 
-#include "profile_group.hpp"
+#include "sys_profile\helpers.hpp"
 
 #include "profile.hpp"
 #include "profile_unit.hpp"
@@ -10,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <algorithm>
 
 using namespace intercept;
 
@@ -89,7 +92,7 @@ namespace alive {
             // garrison vehicles
 
             for (auto& vehicle : vehiclesToGarrison)
-                this->garrisonVehicle(vehicle);
+                garrisonVehicle(vehicle);
 
             _calculateSpeed();
         }
@@ -127,6 +130,13 @@ namespace alive {
         
         // getters
 
+
+        ProfileUnit* ProfileGroup::getUnit(const std::string& id_) {
+            for (auto unit : _units) if (unit->getID() == id_) return unit.get();
+
+            return nullptr;
+        }
+
         
         // setters
 
@@ -135,13 +145,9 @@ namespace alive {
             _pos = newPos_;
 
             // move garrisoned vehicles
-            // #TODO: Improve
 
-            if (_pos.z > 2)
-                sqf::system_chat("SENDING ABOVE ZERO");
-
-            for (auto& unit : _units)
-                if (unit->isInVehicle()) unit->getOccupiedVehicle()->setPosition(_pos, moveObjects_);
+            if (moveObjects_)
+                for (auto& assignment : _vehicleAssignments) assignment->vehicle->setPosition(_pos, moveObjects_);
 
             if (moveObjects_ && _active)
                 for (auto& unit : _units) sqf::set_pos(unit->_unitObject, newPos_);
@@ -164,8 +170,8 @@ namespace alive {
 
             // spawn garrisoned vehicles first
 
-            for (auto& vehicle : _garrisonedVehicles)
-                vehicle->spawn();
+            for (auto& vehicleAssignment : _vehicleAssignments)
+                vehicleAssignment->vehicle->spawn();
 
             // spawn this profile
 
@@ -211,8 +217,8 @@ namespace alive {
 
             // despawn garrisoned vehicles
 
-            for (auto& vehicle : _garrisonedVehicles)
-                vehicle->despawn();
+            for (auto& vehicleAssignment : _vehicleAssignments)
+                vehicleAssignment->vehicle->despawn();
 
             if (_debugEnabled)
                 sqf::set_marker_alpha(_debugMarker, 0.3f);
@@ -227,8 +233,8 @@ namespace alive {
 
             // garrison unit to vehicle if possible
 
-            for (auto& vehicle : _garrisonedVehicles)
-                if (!unit_->isInVehicle() && !vehicle->isFullyGarrisoned()) unit_->getInVehicle(vehicle);
+            for (auto& vehicleAssignment : _vehicleAssignments)
+                if (!unit_->isInVehicle() && !vehicleAssignment->vehicle->isFullyGarrisoned()) unit_->getInVehicle(vehicleAssignment);
 
             _calculateSpeed();
         }
@@ -250,48 +256,104 @@ namespace alive {
                     return;
                 }
             }
-
-            _calculateSpeed();
         }
 
         bool ProfileGroup::garrisonVehicle(ProfileVehicle* vehicle_) {
-            if (_garrisonedVehicles.size() + 1 >= _units.size() || vehicle_->isGarrisoned())
+            if (_vehicleAssignments.size() + 1 >= _units.size() || vehicle_->isGarrisoned())
                 return false;
+            
+            _vehicleAssignments.push_back(new GroupVehicleAssignment(this, vehicle_));
+            
+            if (!_controlsHelicopter && vehicle_->getVehicleType() == common::vehicles::VehicleType::HELICOPTER)
+                _controlsHelicopter = true;
+            else if (!_controlsPlane && vehicle_->getVehicleType() == common::vehicles::VehicleType::PLANE)
+                _controlsPlane = true;
 
-            _garrisonedVehicles.push_back(vehicle_);
-
+            // assign units to vehicle
+            
+            GroupVehicleAssignment* assignment = _vehicleAssignments[_vehicleAssignments.size() - 1];
+            
             auto it = _units.begin();
 
-            while (it != _units.end()) {
-                if (!(*it)->isInVehicle()) (*it)->getInVehicle(vehicle_);
+            while (it != _units.end() && !assignment->vehicle->isFullyGarrisoned()) {
+                if (!(*it)->isInVehicle()) (*it)->getInVehicle(assignment);
                 it++;
+            }
+            
+            _calculateSpeed();
+            
+            return true;
+        }
+
+        bool ProfileGroup::unGarrisonVehicle(GroupVehicleAssignment* assignment_) {
+            if (_ungarrisonStarted) return true;
+
+            auto it = std::find(_vehicleAssignments.begin(), _vehicleAssignments.end(), assignment_);
+
+            if (it == _vehicleAssignments.end())
+                return false;
+
+            _ungarrisonStarted = true;
+
+            // ungarrison units from vehicle
+
+            for (auto& unit : (*it)->units) unit->leaveVehicle();
+
+            // remove garrison vehicle from vehicle
+
+            (*it)->vehicle->_vehicleAssignment = nullptr;
+            
+            // delete vehicle assignment
+
+            _vehicleAssignments.erase(it);
+
+            // check if group still garrisons an air vehicle
+
+            if (_controlsHelicopter || _controlsPlane) {
+                _controlsHelicopter = false;
+                _controlsPlane = false;
+
+                for (auto& vehicleAssignment : _vehicleAssignments) {
+                    if (vehicleAssignment->vehicle->getVehicleType() == common::vehicles::VehicleType::HELICOPTER)
+                        _controlsHelicopter = true;
+                    else if (vehicleAssignment->vehicle->getVehicleType() == common::vehicles::VehicleType::PLANE)
+                        _controlsPlane = true;
+                }
             }
 
             _calculateSpeed();
+
+            _ungarrisonStarted = false;
 
             return true;
         }
 
         bool ProfileGroup::unGarrisonVehicle(unsigned int index_) {
-            if (index_ >= _garrisonedVehicles.size())
+            if (index_ >= _vehicleAssignments.size())
                 return false;
 
-            _garrisonedVehicles.erase(_garrisonedVehicles.begin() + index_);
-
-            _calculateSpeed();
-
-            return true;
+            return unGarrisonVehicle(*(_vehicleAssignments.begin() + index_));
         }
 
         bool ProfileGroup::unGarrisonVehicle(ProfileVehicle* vehicle_) {
-            auto it = std::find(_garrisonedVehicles.begin(), _garrisonedVehicles.end(), vehicle_);
-
-            if (it != _garrisonedVehicles.end()) {
-                unGarrisonVehicle(it - _garrisonedVehicles.begin());
-                return true;
-            }
-
+            for (auto& assignment : _vehicleAssignments)
+                if (vehicle_->getVehicleAssignment() == assignment) return unGarrisonVehicle(assignment);
+            
             return false;
+        }
+
+        GroupVehicleAssignment* ProfileGroup::getVehicleAssignment(ProfileVehicle* vehicle_) {
+            // return assignment if it already exists
+
+            for (auto& assignment : _vehicleAssignments)
+                if (vehicle_->getVehicleAssignment() == assignment) return assignment;
+
+            // vehicle is not assigned to group
+            // create assignment
+
+            _vehicleAssignments.push_back(new GroupVehicleAssignment(this, vehicle_));
+
+            return _vehicleAssignments[_vehicleAssignments.size() - 1];
         }
 
         int ProfileGroup::addWaypoint(ProfileWaypoint& wp_) {
@@ -318,6 +380,12 @@ namespace alive {
                 removeWaypoint(_waypoints.begin() + index_);
         }
 
+        void ProfileGroup::onUnitLeftAssignedVehicle(ProfileUnit* unit_, ProfileVehicle* vehicle_) {
+            unit_->getVehicleAssignment()->removeUnit(unit_);
+
+            if (vehicle_->getVehicleAssignment()->units.size() == 0) unGarrisonVehicle(vehicle_->getVehicleAssignment());
+        }
+
 
         // protected
 
@@ -330,14 +398,14 @@ namespace alive {
             float minSpeed;
 
             bool allUnitsGarrisoned = true;
-
+            
             for (auto& unit : _units) if (!unit->isInVehicle()) allUnitsGarrisoned = false;
 
-            if (allUnitsGarrisoned) {
-                minSpeed = _garrisonedVehicles[0]->getSpeed();
+            if (allUnitsGarrisoned && _units.size() > 0) {
+                minSpeed = _vehicleAssignments[0]->vehicle->getSpeed();
 
-                for(auto& vehicle : _garrisonedVehicles)
-                    if (vehicle->getSpeed() < minSpeed) minSpeed = vehicle->getSpeed();
+                for(auto& vehicleAssignment : _vehicleAssignments)
+                    if (vehicleAssignment->vehicle->getSpeed() < minSpeed) minSpeed = vehicleAssignment->vehicle->getSpeed();
             } else {
                 if (_units.size() > 0) {
                     minSpeed = _units[0]->getSpeed();
@@ -421,10 +489,10 @@ namespace alive {
                     }
 
                     // move profile
-
-                    for (auto& vehicle : _garrisonedVehicles)
-                        if (vehicle->getDir() == 0) vehicle->setDir(common::world::getRelDir(_pos, waypoint.position));
-
+                    
+                    for (auto& vehicleAssignment : _vehicleAssignments)
+                        if (vehicleAssignment->vehicle->getDir() == 0) vehicleAssignment->vehicle->setDir(common::world::getRelDir(_pos, waypoint.position));
+                    
                     types::vector3 newPos = common::math::lerp(
                         _pos,
                         waypoint.position,

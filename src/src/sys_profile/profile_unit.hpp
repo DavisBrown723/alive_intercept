@@ -3,6 +3,7 @@
 #include "intercept.hpp"
 
 #include "common\include.hpp"
+#include "helpers.hpp"
 
 #include <string>
 
@@ -12,12 +13,14 @@ namespace alive {
 
         
         class ProfileGroup;
+        class ProfileVehicle;
 
 
         class ProfileUnit {
 
 
             friend class ProfileGroup;
+            friend class GroupVehicleAssignment;
 
 
             public:
@@ -47,15 +50,22 @@ namespace alive {
                         intercept::sqf::get_pos(_unitObject);
                 }
 
-                bool isInVehicle() const                    { return _occupiedVehicle != nullptr; }
-                ProfileVehicle* getOccupiedVehicle() const  { return _occupiedVehicle; }
+                bool isInVehicle() const                    { return _vehicleAssignment != nullptr; }
+                ProfileVehicle* getOccupiedVehicle()  {
+                    if (_vehicleAssignment == nullptr)
+                        return nullptr;
+                    else
+                        return _vehicleAssignment->vehicle;
+                }
+
+                GroupVehicleAssignment* getVehicleAssignment() const { return _vehicleAssignment; }
 
 
                 // setters
 
 
                 void setPosition(const intercept::types::vector3& pos_) {
-                    if (!_unitObject.is_null() && _occupiedVehicle == nullptr)
+                    if (!_unitObject.is_null() && _vehicleAssignment == nullptr)
                         intercept::sqf::set_pos(_unitObject, pos_);
                 }
 
@@ -66,10 +76,13 @@ namespace alive {
                 virtual void spawn(ProfileGroup* profile_);
                 virtual void despawn();
 
+                void getInVehicle(GroupVehicleAssignment* vehicleAssignment_);
                 void getInVehicle(ProfileVehicle* vehicle_);
                 void leaveVehicle();
 
                 void switchGroup(ProfileGroup* profile_);
+
+                void onLeftAssignedVehicle();
 
 
             protected:
@@ -83,9 +96,11 @@ namespace alive {
                 float _health;
                 float _speed;
 
-                ProfileVehicle* _occupiedVehicle = nullptr;
+                GroupVehicleAssignment* _vehicleAssignment = nullptr;
 
                 intercept::types::object _unitObject;
+
+                bool _beingDeleted = false;
 
 
         };

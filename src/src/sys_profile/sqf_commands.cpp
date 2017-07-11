@@ -28,6 +28,9 @@ namespace alive {
 
                 intercept::types::registered_sqf_function _profileAddWaypoint;
                 intercept::types::registered_sqf_function _profileRemoveWaypoint;
+
+                intercept::types::registered_sqf_function _profileUnitGetIn;
+                intercept::types::registered_sqf_function _profileUnitGetOut;
             }
 
             void registerScriptCommands() {
@@ -108,6 +111,24 @@ namespace alive {
                     userFunctionWrapper<sqf_commands::getProfileSpeed>,
                     intercept::types::GameDataType::ARRAY,
                     intercept::types::GameDataType::STRING
+                );
+
+                sqf_commands::handles::_profileUnitGetIn = intercept::client::host::registerFunction(
+                    "profileUnitGetIn",
+                    "GetInMan eventhandler for profile units.",
+                    userFunctionWrapper<sqf_commands::profileUnitGetIn>,
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::OBJECT,
+                    intercept::types::GameDataType::OBJECT
+                );
+
+                sqf_commands::handles::_profileUnitGetOut = intercept::client::host::registerFunction(
+                    "profileUnitGetOut",
+                    "GetOutMan eventhandler for profile units.",
+                    userFunctionWrapper<sqf_commands::profileUnitGetOut>,
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::OBJECT,
+                    intercept::types::GameDataType::OBJECT
                 );
             }
 
@@ -336,6 +357,48 @@ namespace alive {
             }
 
             game_value profileRemoveWaypoint(game_value profileID_, game_value waypointIndex_) {
+                return game_value();
+            }
+
+            game_value profileUnitGetIn(game_value unitObject_, game_value vehicleObject_) {
+                std::string unitProfileID = intercept::sqf::get_variable(intercept::types::object(unitObject_), "alive_profileID", "");
+                std::string vehicleProfileID = intercept::sqf::get_variable(intercept::types::object(unitObject_), "alive_profileID", "");
+
+                if (unitProfileID != "" && vehicleProfileID != "") {
+                    ProfileGroup* profileGroup = (ProfileGroup*)ProfileSystem::get().getProfileHandler().getProfile(unitProfileID);
+                    ProfileVehicle* profileVehicle = (ProfileVehicle*)ProfileSystem::get().getProfileHandler().getProfile(vehicleProfileID);
+                    
+                    if (profileGroup != nullptr && profileVehicle != nullptr) {
+                        ProfileUnit* unit = profileGroup->getUnit(intercept::sqf::get_variable(intercept::types::object(unitObject_), "alive_profileUnitID", ""));
+
+                        if (unit != nullptr) unit->getInVehicle(profileVehicle);
+                    }
+                }
+
+                return game_value();
+            }
+
+            game_value profileUnitGetOut(game_value unitObject_, game_value vehicleObject_) {
+                // if unit left vehicle
+                // but is still assigned
+                // ignore
+
+                if (unitObject_ == vehicleObject_ || intercept::sqf::assigned_vehicle(unitObject_) == intercept::types::object(vehicleObject_))
+                    return game_value();
+
+                std::string unitProfileID = intercept::sqf::get_variable(intercept::types::object(unitObject_), "alive_profileID", "");
+                std::string vehicleProfileID = intercept::sqf::get_variable(intercept::types::object(unitObject_), "alive_profileID", "");
+
+                if (unitProfileID != "" && vehicleProfileID != "") {
+                    ProfileGroup* profileGroup = (ProfileGroup*)ProfileSystem::get().getProfileHandler().getProfile(unitProfileID);
+
+                    if (profileGroup != nullptr) {
+                        ProfileUnit* unit = profileGroup->getUnit(intercept::sqf::get_variable(intercept::types::object(unitObject_), "alive_profileUnitID", ""));
+
+                        if (unit != nullptr) unit->leaveVehicle();
+                    }
+                }
+
                 return game_value();
             }
         }

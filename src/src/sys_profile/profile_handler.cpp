@@ -50,6 +50,8 @@ namespace alive {
             if (it == _profiles.end())
                 return;
 
+            (*it)->onKilled();
+
             _profiles.erase(it);
 
             if (profile_->getSide() == RV::get().sides.East)

@@ -26,6 +26,9 @@ namespace alive {
 
                 extern intercept::types::registered_sqf_function _profileAddWaypoint;
                 extern intercept::types::registered_sqf_function _profileRemoveWaypoint;
+
+                extern intercept::types::registered_sqf_function _profileUnitGetIn;
+                extern intercept::types::registered_sqf_function _profileUnitGetOut;
             }
 
             void registerScriptCommands();
@@ -55,6 +58,9 @@ namespace alive {
 
             game_value profileAddWaypoint(game_value profileID_, game_value waypointArgs_);
             game_value profileRemoveWaypoint(game_value profileID_, game_value waypointIndex_);
+
+            game_value profileUnitGetIn(game_value unitObject_, game_value vehicleObject_);
+            game_value profileUnitGetOut(game_value unitObject_, game_value vehicleObject_);
         }
     }
 }

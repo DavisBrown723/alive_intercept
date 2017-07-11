@@ -1,6 +1,9 @@
 #include "profile_unit.hpp"
 
+#include "intercept.hpp"
+
 #include "profile_group.hpp"
+#include "helpers.hpp"
 
 using namespace intercept;
 
@@ -36,7 +39,7 @@ namespace alive {
             if (sqf::is_null(_unitObject))
                 sqf::delete_vehicle(_unitObject);
 
-            if (_occupiedVehicle != nullptr)
+            if (_vehicleAssignment != nullptr)
                 leaveVehicle();
         }
 
@@ -59,8 +62,11 @@ namespace alive {
             sqf::set_variable(_unitObject, "alive_profileUnitID", _id);
             sqf::set_damage(_unitObject, 1.f - _health, false);
 
-            if (_occupiedVehicle != nullptr)
-                sqf::move_in_any(_unitObject, _occupiedVehicle->getVehicleObject());
+            if (_vehicleAssignment != nullptr)
+                sqf::move_in_any(_unitObject, _vehicleAssignment->vehicle->getVehicleObject());
+
+            sqf::add_event_handler(_unitObject, "GetInMan", "(_this select 0) profileUnitGetIn (_this select 2)");
+            sqf::add_event_handler(_unitObject, "GetOutMan", "(_this select 0) profileUnitGetOut (_this select 2)");
 
             _active = true;
         }
@@ -73,36 +79,57 @@ namespace alive {
 
             _health = 1.f - sqf::damage(_unitObject);
 
+            _beingDeleted = true;
             sqf::delete_vehicle(_unitObject);
+            _beingDeleted = false;
 
             _active = false;
         }
 
-        void ProfileUnit::getInVehicle(ProfileVehicle* vehicle_) {
-            if (_occupiedVehicle != nullptr)
+        void ProfileUnit::getInVehicle(GroupVehicleAssignment* vehicleAssignment_) {
+            if (_vehicleAssignment != nullptr)
                 return;
 
-            vehicle_->seatUnit(this);
+            vehicleAssignment_->vehicle->seatUnit(this);
 
-            _occupiedVehicle = vehicle_;
+            _vehicleAssignment = vehicleAssignment_;
+        }
+
+        void ProfileUnit::getInVehicle(ProfileVehicle* vehicle_) {
+            if (_vehicleAssignment != nullptr)
+                return;
+
+            this->getInVehicle(_profile->getVehicleAssignment(vehicle_));
         }
 
         void ProfileUnit::leaveVehicle() {
-            _occupiedVehicle->unseatUnit(this);
+            // if GetOut EH fired because the
+            // unit was being deleted
+            // exit
+            if (_beingDeleted) {
+                _beingDeleted = false;
+                return;
+            }
 
-            _occupiedVehicle = nullptr;
+            _vehicleAssignment->vehicle->unseatUnit(this);
+
+            _vehicleAssignment = nullptr;
         }
 
         void ProfileUnit::switchGroup(ProfileGroup* profile_) {
+            // initialize with other group
+
+            profile_->addUnit(this);
+
             // uninitialize with current group
 
             this->leaveVehicle();
 
             _profile->removeUnit(this);
+        }
 
-            // initialize with other group
-
-            profile_->addUnit(this);
+        void ProfileUnit::onLeftAssignedVehicle() {
+            _vehicleAssignment = nullptr;
         }
 
     }

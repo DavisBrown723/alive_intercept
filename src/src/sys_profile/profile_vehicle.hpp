@@ -1,10 +1,11 @@
 #pragma once
 
-#include "profile.hpp"
 
 #include "intercept.hpp"
 #include "common\include.hpp"
 #include "sys_profile\helpers.hpp"
+
+#include "profile.hpp"
 #include "profile_unit.hpp"
 
 #include <string>
@@ -17,6 +18,8 @@ namespace alive {
         class ProfileVehicle : public Profile {
 
             friend class ProfileHandler;
+            friend class ProfileGroup;
+            friend class GroupVehicleAssignment;
 
             public:
 
@@ -60,6 +63,7 @@ namespace alive {
                 common::vehicles::VehicleType getVehicleType() const                        { return _vehicleType; }
                 int getDir() const                                                          { return _dir; }
                 float getFuel() const                                                       { return _fuel; }
+                GroupVehicleAssignment* getVehicleAssignment() const                        { return _vehicleAssignment; }
 
                 const std::vector<HitPoint>& getHitpoints() const                           { return _hitpoints; }
                 const std::vector<common::vehicles::TurretMagazine>& getMagazines() const   { return _magazines; }
@@ -84,7 +88,9 @@ namespace alive {
                 virtual void despawn();
                 virtual void update(const float dt_);
 
-                virtual bool isGarrisoned() const       { return _garrisonedUnits.size() > 0; }
+                virtual void onKilled() override;
+
+                virtual bool isGarrisoned() const       { return _seatCount > _seatsLeft; }
                 virtual bool isFullyGarrisoned() const  { return _seatsLeft == 0; }
                 bool seatUnit(ProfileUnit* unit_);
                 void unseatUnit(ProfileUnit* unit_);
@@ -108,7 +114,7 @@ namespace alive {
                 int _seatCount = 0;
                 int _seatsLeft = 0;
 
-                std::vector<ProfileUnit*> _garrisonedUnits;
+                GroupVehicleAssignment* _vehicleAssignment = nullptr;
 
                 intercept::types::object _vehicleObject;
 
@@ -116,6 +122,8 @@ namespace alive {
 
                 virtual void _calculateSpeed() override;
                 virtual void _createDebugMarker() override;
+
+                virtual void _updateMovement();
 
                 void _initialize();
                 void _initializeHitpoints();

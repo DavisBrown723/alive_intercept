@@ -1,8 +1,13 @@
 #include "profile_vehicle.hpp"
 
+#include "intercept.hpp"
+
+#include "common\include.hpp"
+#include "sys_profile\helpers.hpp"
+
 #include "profile_system.hpp"
 #include "profile_handler.hpp"
-#include "common\include.hpp"
+#include "profile_group.hpp"
 
 #include <string>
 #include <vector>
@@ -64,8 +69,10 @@ namespace alive {
         ProfileVehicle::~ProfileVehicle() {
             enableDebug(false);
 
-            for (auto& unit : _garrisonedUnits)
-                unit->leaveVehicle();
+            if (_vehicleAssignment != nullptr) {
+                for (auto& unit : _vehicleAssignment->units)
+                    unit->leaveVehicle();
+            }
         }
 
         ProfileVehicle* ProfileVehicle::Create(
@@ -121,13 +128,9 @@ namespace alive {
 
             _vehicleObject = sqf::create_vehicle(_vehicleClass, _pos, {}, 0.f, "CAN_COLLIDE");
 
-            // #TODO: Add GetOut eventhandler
-            // checks if unit is profileunit
-            // if the unit's C++ assigned vehicle
-            // is different from in-game assigned vehicle
-            // unseat unit from vehicle
-
             // set vehicle info
+
+            sqf::set_variable(_vehicleObject, "alive_profileID", _id);
 
             sqf::set_dir(_vehicleObject, static_cast<float>(_dir));
             sqf::set_fuel(_vehicleObject, _fuel);
@@ -203,14 +206,20 @@ namespace alive {
         }
 
         void ProfileVehicle::update(const float dt_) {
+            _updateMovement();
+        }
 
+        void ProfileVehicle::onKilled() {
+            //if (_vehicleAssignment != nullptr)
+            // onVehicleDestroyed
         }
 
         bool ProfileVehicle::seatUnit(ProfileUnit* unit_) {
             if (_seatsLeft == 0)
                 return false;
 
-            _garrisonedUnits.push_back(unit_);
+            _vehicleAssignment->units.push_back(unit_);
+            //_garrisonedUnits.push_back(unit_);
 
             _seatsLeft--;
 
@@ -218,10 +227,7 @@ namespace alive {
         }
 
         void ProfileVehicle::unseatUnit(ProfileUnit* unit_) {
-            auto it = std::find(_garrisonedUnits.begin(), _garrisonedUnits.end(), unit_);
-            
-            if (it != _garrisonedUnits.end())
-                _garrisonedUnits.erase(it);
+            _vehicleAssignment->group->onUnitLeftAssignedVehicle(unit_, this);
 
             _seatsLeft++;
         }
@@ -304,6 +310,16 @@ namespace alive {
 
             if (false)
                 sqf::set_marker_color(_debugMarker, "ColorYellow");
+        }
+        
+        void ProfileVehicle::_updateMovement() {
+            if (_active) {
+                if (!sqf::is_null(_vehicleObject))
+                    this->setPosition(sqf::get_pos(_vehicleObject));
+            } else {
+                if (_vehicleAssignment != nullptr)
+                    this->setPosition(_vehicleAssignment->group->getPosition());
+            }
         }
 
         void ProfileVehicle::_initialize() {
