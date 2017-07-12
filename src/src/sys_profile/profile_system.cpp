@@ -72,6 +72,12 @@ namespace alive {
                 _nextProfileToSimIndex = 0;
         }
 
+        void ProfileSystem::onMissionStopped() {
+            _profileHandler.reset();
+        
+            _nextProfileToSimIndex = 0;
+        }
+
         void ProfileSystem::onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) {
             std::string profileID = intercept::sqf::get_variable(killed_, "alive_profileID", "");
 

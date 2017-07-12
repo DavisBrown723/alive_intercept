@@ -56,6 +56,8 @@ namespace alive {
                 // functional
 
 
+                void reset();
+
                 void registerProfile(Profile* profile_);
                 void unregisterProfile(Profile* profile_);
 

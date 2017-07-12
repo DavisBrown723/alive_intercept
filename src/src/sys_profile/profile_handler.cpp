@@ -18,6 +18,16 @@ namespace alive {
 
         }
 
+        void ProfileHandler::reset() {
+            _profiles.clear();
+
+            _profilesEast.clear();
+            _profilesWest.clear();
+            _profilesGuer.clear();
+
+            _profileMap.clear();
+        }
+
         void ProfileHandler::registerProfile(Profile* profile_) {
             profile_->_id = _generateID();
 
