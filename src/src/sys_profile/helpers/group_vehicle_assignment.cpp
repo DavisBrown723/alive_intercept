@@ -27,7 +27,7 @@ namespace alive {
                 auto it = std::find(units.begin(), units.end(), unit_);
 
                 if (it != units.end()) {
-                    unit_->onLeftAssignedVehicle();
+                    //unit_->onLeftAssignedVehicle();
 
                     units.erase(it);
                 }

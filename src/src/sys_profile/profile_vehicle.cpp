@@ -69,10 +69,8 @@ namespace alive {
         ProfileVehicle::~ProfileVehicle() {
             enableDebug(false);
 
-            if (_vehicleAssignment != nullptr) {
-                for (auto& unit : _vehicleAssignment->units)
-                    unit->leaveVehicle();
-            }
+            if (_vehicleAssignment != nullptr)
+                _vehicleAssignment->group->unGarrisonVehicle(_vehicleAssignment);
         }
 
         ProfileVehicle* ProfileVehicle::Create(

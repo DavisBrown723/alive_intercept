@@ -7,7 +7,7 @@
 #include "math.hpp"
 #include "world.hpp"
 
-#include "allegiance\include.hpp"
-#include "containers\include.hpp"
-#include "simulation\include.hpp"
-#include "vehicles\include.hpp"
+#include "allegiance\allegiance_include.hpp"
+#include "containers\containers_include.hpp"
+#include "simulation\simulation_include.hpp"
+#include "vehicles\vehicles_include.hpp"

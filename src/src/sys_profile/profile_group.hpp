@@ -117,8 +117,6 @@ namespace alive {
                 bool _controlsHelicopter = false;
                 bool _controlsPlane = false;
 
-                bool _ungarrisonStarted = false;
-
 
                 // functions
 

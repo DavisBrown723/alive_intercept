@@ -99,6 +99,15 @@ namespace alive {
 
         ProfileGroup::~ProfileGroup() {
             enableDebug(false);
+
+            for (auto& unit : _units)
+                unit->onLeftAssignedVehicle();
+
+            while (_vehicleAssignments.size() > 0)
+                unGarrisonVehicle(unsigned int(0));
+
+            for (auto& it = _units.begin(); it != _units.end(); it++)
+                it = _units.erase(it);
         }
 
         ProfileGroup* ProfileGroup::Create(
@@ -286,18 +295,15 @@ namespace alive {
         }
 
         bool ProfileGroup::unGarrisonVehicle(GroupVehicleAssignment* assignment_) {
-            if (_ungarrisonStarted) return true;
-
             auto it = std::find(_vehicleAssignments.begin(), _vehicleAssignments.end(), assignment_);
 
             if (it == _vehicleAssignments.end())
                 return false;
 
-            _ungarrisonStarted = true;
-
             // ungarrison units from vehicle
 
-            for (auto& unit : (*it)->units) unit->leaveVehicle();
+            for (auto& unit : (*it)->units)
+                unit->onLeftAssignedVehicle();
 
             // remove garrison vehicle from vehicle
 
@@ -322,8 +328,6 @@ namespace alive {
             }
 
             _calculateSpeed();
-
-            _ungarrisonStarted = false;
 
             return true;
         }
@@ -399,7 +403,10 @@ namespace alive {
 
             bool allUnitsGarrisoned = true;
             
-            for (auto& unit : _units) if (!unit->isInVehicle()) allUnitsGarrisoned = false;
+            if (_vehicleAssignments.size() == 0)
+                allUnitsGarrisoned = false;
+            else
+                for (auto& unit : _units) if (!unit->isInVehicle()) allUnitsGarrisoned = false;
 
             if (allUnitsGarrisoned && _units.size() > 0) {
                 minSpeed = _vehicleAssignments[0]->vehicle->getSpeed();
