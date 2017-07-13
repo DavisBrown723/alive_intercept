@@ -351,19 +351,7 @@ namespace alive {
         }
 
         void ProfileVehicle::_initializeSeats() {
-            auto positions = common::vehicles::getVehiclePositions(_vehicleClass);
-
-            if (positions.Driver.isSeat)
-                _seatCount++;
-
-            if (positions.Gunner.isSeat)
-                _seatCount++;
-
-            if (positions.Commander.isSeat)
-                _seatCount++;
-
-            _seatCount += positions.Turrets.size();
-            _seatCount += positions.Cargo.size();
+            _seatCount = common::vehicles::getVehiclePositionCount(_vehicleClass);
 
             _seatsLeft = _seatCount;
         }

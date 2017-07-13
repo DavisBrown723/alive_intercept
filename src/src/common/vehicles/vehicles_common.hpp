@@ -25,13 +25,15 @@ namespace alive {
             std::vector< std::vector<int> > getVehicleTurretPaths(const std::string& vehicleClass_);
 
             VehiclePositions getVehiclePositions(const std::string& vehicleClass_);
+            int getVehiclePositionCount(const std::string& vehicleClass_);
 
 
             namespace __internal {
 
                 void getVehicleTurretMagsRecurse(std::vector<TurretMagazine>& result_, intercept::sqf::config_entry& turretConfig_, std::vector<int> turretPath_ = {});
 
-                void _getVehiclePositionsCount(std::vector<int>& result_, intercept::sqf::config_entry& turretConfig_, std::vector<int> turretPath_ = {});
+                int _getVehicleTurretCount(intercept::sqf::config_entry& turretConfig_);
+                void _getVehiclePositionsCountBySeat(std::vector<int>& result_, intercept::sqf::config_entry& turretConfig_, std::vector<int> turretPath_ = {});
 
             }
 

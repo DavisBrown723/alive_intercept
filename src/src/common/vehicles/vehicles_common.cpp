@@ -89,7 +89,7 @@ namespace alive {
 
                 std::vector<int> positionsCount{ 0,0,0,0,0 };
 
-                __internal::_getVehiclePositionsCount(positionsCount, vehicleConfig >> "Turrets");
+                __internal::_getVehiclePositionsCountBySeat(positionsCount, vehicleConfig >> "Turrets");
 
                 if (static_cast<int>(sqf::get_number(vehicleConfig >> "hasDriver")) == 1)
                     positions.Driver = { true };
@@ -110,6 +110,23 @@ namespace alive {
                     positions.Cargo.push_back({ true });
 
                 return positions;
+            }
+
+            int getVehiclePositionCount(const std::string& vehicleClass_) {
+                sqf::config_entry vehicleConfig = sqf::config_entry(sqf::config_file()) >> "CfgVehicles" >> vehicleClass_;
+
+                int count = 0;
+
+                if (static_cast<int>(sqf::get_number(vehicleConfig >> "hasDriver")) == 1)
+                    count++;
+
+                count += static_cast<int>(sqf::get_number(vehicleConfig >> "transportSoldier"));
+
+                // count turrets
+
+                count += __internal::_getVehicleTurretCount(sqf::config_entry(vehicleConfig >> "Turrets"));
+
+                return count;
             }
 
 
@@ -145,7 +162,33 @@ namespace alive {
                     }
                 }
 
-                void _getVehiclePositionsCount(std::vector<int>& result_, intercept::sqf::config_entry& turretConfig_, std::vector<int> turretPath_) {
+                int _getVehicleTurretCount(intercept::sqf::config_entry& turretConfig_) {
+                    int turretCount = static_cast<int>(sqf::count(turretConfig_));
+
+                    sqf::config_entry turret;
+                    sqf::config_entry subTurrets;
+
+                    int count = 0;
+
+                    for (int i = 0; i < turretCount; i++) {
+                        turret = sqf::select(turretConfig_, static_cast<float>(i));
+
+                        if (sqf::is_class(turret)) {
+                            count++;
+
+                            //  add sub turrets
+
+                            subTurrets = turretConfig_ >> "Turrets";
+
+                            if (sqf::is_class(subTurrets))
+                                count += _getVehicleTurretCount(subTurrets);
+                        }
+                    }
+
+                    return count;
+                }
+
+                void _getVehiclePositionsCountBySeat(std::vector<int>& result_, intercept::sqf::config_entry& turretConfig_, std::vector<int> turretPath_) {
                     int turretCount = static_cast<int>(sqf::count(turretConfig_));
 
                     sqf::config_entry turret;
@@ -198,7 +241,7 @@ namespace alive {
                             sqf::config_entry subTurrets = turretConfig_ >> "Turrets";
 
                             if (sqf::is_class(subTurrets))
-                                _getVehiclePositionsCount(result_, subTurrets, path);
+                                _getVehiclePositionsCountBySeat(result_, subTurrets, path);
                         }
                     }
                 }
