@@ -71,6 +71,9 @@ namespace alive {
 
             if (_vehicleAssignment != nullptr)
                 _vehicleAssignment->group->unGarrisonVehicle(_vehicleAssignment);
+
+            if (_active && sqf::alive(_vehicleObject))
+                sqf::delete_vehicle(_vehicleObject);
         }
 
         ProfileVehicle* ProfileVehicle::Create(
@@ -159,7 +162,7 @@ namespace alive {
             // spawn complete
 
             if (_debugEnabled)
-                sqf::set_marker_alpha(_debugMarker, 1.f);
+                sqf::set_marker_alpha(_debugMarker, 0.7f);
 
             _active = true;
         }
@@ -208,8 +211,7 @@ namespace alive {
         }
 
         void ProfileVehicle::onKilled() {
-            //if (_vehicleAssignment != nullptr)
-            // onVehicleDestroyed
+
         }
 
         bool ProfileVehicle::seatUnit(ProfileUnit* unit_) {
@@ -217,7 +219,6 @@ namespace alive {
                 return false;
 
             _vehicleAssignment->units.push_back(unit_);
-            //_garrisonedUnits.push_back(unit_);
 
             _seatsLeft--;
 
@@ -244,10 +245,12 @@ namespace alive {
             _debugMarker = sqf::create_marker(_id + "_debug", _pos);
 
             sqf::set_marker_pos(_debugMarker, _pos);
-            sqf::set_marker_size(_debugMarker, types::vector2(0.6f, 0.6f));
+            sqf::set_marker_size(_debugMarker, types::vector2(0.9f, 0.9f));
 
-            if (!_active)
-                sqf::set_marker_alpha(_debugMarker, 0.6f);
+            if (_active)
+                sqf::set_marker_alpha(_debugMarker, 0.7f);
+            else
+                sqf::set_marker_alpha(_debugMarker, 0.3f);
 
             std::string markerType;
             switch (_vehicleType) {

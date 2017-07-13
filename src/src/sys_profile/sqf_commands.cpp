@@ -23,8 +23,11 @@ namespace alive {
 
                 intercept::types::registered_sqf_function _createProfileGroup;
                 intercept::types::registered_sqf_function _createProfileVehicle;
-                intercept::types::registered_sqf_function _getProfilePosition;
-                intercept::types::registered_sqf_function _getProfileSpeed;
+
+                intercept::types::registered_sqf_function _unregisterProfile;
+
+                intercept::types::registered_sqf_function _profileGetPosition;
+                intercept::types::registered_sqf_function _profileGetSpeed;
 
                 intercept::types::registered_sqf_function _profileAddWaypoint;
                 intercept::types::registered_sqf_function _profileRemoveWaypoint;
@@ -97,20 +100,46 @@ namespace alive {
                     intercept::types::GameDataType::ARRAY
                 );
 
-                sqf_commands::handles::_getProfilePosition = intercept::client::host::registerFunction(
+                sqf_commands::handles::_unregisterProfile = intercept::client::host::registerFunction(
+                    "unregisterProfile",
+                    "Unregisters an ALiVE profile.",
+                    userFunctionWrapper<sqf_commands::unregisterProfile>,
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::STRING
+                );
+
+                sqf_commands::handles::_profileGetPosition = intercept::client::host::registerFunction(
                     "getProfilePosition",
                     "Gets the position of an ALiVE Profile.",
-                    userFunctionWrapper<sqf_commands::getProfilePosition>,
+                    userFunctionWrapper<sqf_commands::profileGetPosition>,
                     intercept::types::GameDataType::ARRAY,
                     intercept::types::GameDataType::STRING
                 );
 
-                sqf_commands::handles::_getProfileSpeed = intercept::client::host::registerFunction(
+                sqf_commands::handles::_profileGetSpeed = intercept::client::host::registerFunction(
                     "getProfileSpeed",
                     "Gets the speed of an ALiVE Profile.",
-                    userFunctionWrapper<sqf_commands::getProfileSpeed>,
+                    userFunctionWrapper<sqf_commands::profileGetSpeed>,
                     intercept::types::GameDataType::ARRAY,
                     intercept::types::GameDataType::STRING
+                );
+
+                sqf_commands::handles::_profileAddWaypoint = intercept::client::host::registerFunction(
+                    "profileAddWaypoint",
+                    "Adds a waypoint to an ALiVE Profile.",
+                    userFunctionWrapper<sqf_commands::profileAddWaypoint>,
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::STRING,
+                    intercept::types::GameDataType::ARRAY
+                );
+
+                sqf_commands::handles::_profileRemoveWaypoint = intercept::client::host::registerFunction(
+                    "profilRemoveWaypoint",
+                    "Removes a waypoint from an ALiVE Profile.",
+                    userFunctionWrapper<sqf_commands::profileRemoveWaypoint>,
+                    intercept::types::GameDataType::NOTHING,
+                    intercept::types::GameDataType::STRING,
+                    intercept::types::GameDataType::ARRAY
                 );
 
                 sqf_commands::handles::_profileUnitGetIn = intercept::client::host::registerFunction(
@@ -250,7 +279,8 @@ namespace alive {
                     profile = ProfileGroup::Create(side, faction, pos, unitClasses);
                 }
 
-                profile->addWaypoint(ProfileWaypoint{ {5000,5000,0} });
+                // #TODO: Remove
+                //profile->addWaypoint(ProfileWaypoint{ {5000,5000,0} });
 
                 return profile->getID();
             }
@@ -287,7 +317,18 @@ namespace alive {
                 return profile->getID();
             }
 
-            game_value getProfilePosition(game_value profileID_) {
+            game_value unregisterProfile(game_value profileID_) {
+                if (!ProfileSystem::isInitialized())
+                    return game_value();
+
+                Profile* profile = ProfileSystem::get().getProfileHandler().getProfile(static_cast<std::string>(profileID_));
+
+                ProfileSystem::get().getProfileHandler().unregisterProfile(profile);
+
+                return game_value();
+            }
+
+            game_value profileGetPosition(game_value profileID_) {
                 if (!ProfileSystem::isInitialized())
                     return intercept::types::vector3(0, 0, 0);
 
@@ -299,7 +340,7 @@ namespace alive {
                     return intercept::types::vector3(0, 0, 0);
             }
 
-            game_value getProfileSpeed(game_value profileID_) {
+            game_value profileGetSpeed(game_value profileID_) {
                 if (!ProfileSystem::isInitialized())
                     return game_value(-1.f);
 

@@ -92,6 +92,18 @@ namespace alive {
                 } else {
                     ProfileVehicle* profile = static_cast<ProfileVehicle*>(_profileHandler.getProfile(profileID));
 
+                    for (auto& player : intercept::sqf::all_players()) {
+                        if (intercept::sqf::vehicle(player) == killed_) {
+                            ProfileGroup* profile = static_cast<ProfileGroup*>(_profileHandler.getProfile(
+                                intercept::sqf::get_variable(player, "alive_profileID", "")
+                            ));
+
+                            profile->removeUnit(
+                                intercept::sqf::get_variable(player, "alive_profileUnitID", "")
+                            );
+                        }
+                    }
+
                     ProfileSystem::get().getProfileHandler().unregisterProfile(profile);
                 }
             }

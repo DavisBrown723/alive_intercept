@@ -26,11 +26,8 @@ namespace alive {
             void GroupVehicleAssignment::removeUnit(ProfileUnit* unit_) {
                 auto it = std::find(units.begin(), units.end(), unit_);
 
-                if (it != units.end()) {
-                    //unit_->onLeftAssignedVehicle();
-
+                if (it != units.end())
                     units.erase(it);
-                }
             }
 
 

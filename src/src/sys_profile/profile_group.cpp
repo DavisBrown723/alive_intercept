@@ -52,8 +52,6 @@ namespace alive {
             :
             Profile(side_, faction_, pos_)
         {
-            std::vector<std::string> unitClasses;
-
             // get unit classes from group config
 
             int configSize = static_cast<int>(sqf::count(groupConfig_));
@@ -67,12 +65,13 @@ namespace alive {
 
                 if (sqf::is_class(configItem)) {
                     configEntry = configItem;
+
                     std::string unitClass = sqf::get_text(configEntry >> "vehicle");
 
-                    if (sqf::is_kind_of(unitClass, "Man")) {
+                    if (sqf::is_kind_of(unitClass,"Man")) {
                         // add unit to profile
 
-                        unitClasses.push_back(sqf::get_text(configEntry >> "vehicle"));
+                        addUnit(new ProfileUnit(this, sqf::get_text(configEntry >> "vehicle")));
                     } else {
                         // create vehicle profile
                         // link to this profile
@@ -84,13 +83,6 @@ namespace alive {
                 }
             }
 
-            // create units
-
-            for (auto& unitClass : unitClasses)
-                addUnit(new ProfileUnit(this, unitClass));
-
-            // garrison vehicles
-
             for (auto& vehicle : vehiclesToGarrison)
                 garrisonVehicle(vehicle);
 
@@ -100,14 +92,10 @@ namespace alive {
         ProfileGroup::~ProfileGroup() {
             enableDebug(false);
 
-            for (auto& unit : _units)
-                unit->onLeftAssignedVehicle();
+            _units.clear();
 
             while (_vehicleAssignments.size() > 0)
                 unGarrisonVehicle(unsigned int(0));
-
-            for (auto& it = _units.begin(); it != _units.end(); it++)
-                it = _units.erase(it);
         }
 
         ProfileGroup* ProfileGroup::Create(
@@ -190,7 +178,7 @@ namespace alive {
                 unit->spawn(this);
 
             if (_debugEnabled)
-                sqf::set_marker_alpha(_debugMarker, 1.f);
+                sqf::set_marker_alpha(_debugMarker, 0.8f);
 
             // ProfileWaypoints to real waypoints
 
@@ -253,17 +241,17 @@ namespace alive {
         }
 
         void ProfileGroup::removeUnit(const std::string& unitID_) {
-            for (auto& i = _units.begin(); i != _units.end(); i++) {
-                if (i->get()->_id == unitID_) {
-                    _units.erase(i);
+            auto it = std::find_if(_units.begin(), _units.end(), [&](std::shared_ptr<ProfileUnit>& unit_) { return unit_->getID() == unitID_; });
 
-                    if (_units.size() == 0)
-                        ProfileSystem::get().getProfileHandler().unregisterProfile(this);
-                    else
-                        _calculateSpeed();
+            if (it != _units.end()) {
+                std::shared_ptr<ProfileUnit> unitCopy(*it); // #TODO: Keeps unit alive as long as the _units vector is being accessed inside it's destructor
+                
+                _units.erase(it);
 
-                    return;
-                }
+                if (_units.size() > 0)
+                    _calculateSpeed();
+                else
+                    ProfileSystem::get().getProfileHandler().unregisterProfile(this);
             }
         }
 
@@ -303,7 +291,7 @@ namespace alive {
             // ungarrison units from vehicle
 
             for (auto& unit : (*it)->units)
-                unit->onLeftAssignedVehicle();
+                unit->_vehicleAssignment = nullptr;
 
             // remove garrison vehicle from vehicle
 
@@ -399,6 +387,11 @@ namespace alive {
         }
 
         void ProfileGroup::_calculateSpeed() {
+            if (_units.size() == 0) {
+                _speed = 0;
+                return;
+            }
+
             float minSpeed;
 
             bool allUnitsGarrisoned = true;
@@ -408,18 +401,16 @@ namespace alive {
             else
                 for (auto& unit : _units) if (!unit->isInVehicle()) allUnitsGarrisoned = false;
 
-            if (allUnitsGarrisoned && _units.size() > 0) {
+            if (allUnitsGarrisoned) {
                 minSpeed = _vehicleAssignments[0]->vehicle->getSpeed();
 
                 for(auto& vehicleAssignment : _vehicleAssignments)
                     if (vehicleAssignment->vehicle->getSpeed() < minSpeed) minSpeed = vehicleAssignment->vehicle->getSpeed();
             } else {
-                if (_units.size() > 0) {
-                    minSpeed = _units[0]->getSpeed();
+                minSpeed = _units[0]->getSpeed();
 
-                    for (auto& unit : _units)
-                        if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
-                }
+                for (auto& unit : _units)
+                    if (unit->getSpeed() < minSpeed) minSpeed = unit->getSpeed();
             }
 
             _speed = minSpeed;
@@ -431,7 +422,9 @@ namespace alive {
             sqf::set_marker_pos(_debugMarker, _pos);
             sqf::set_marker_size(_debugMarker, types::vector2(0.6f, 0.6f));
 
-            if (!_active)
+            if (_active)
+                sqf::set_marker_alpha(_debugMarker, 0.8f);
+            else
                 sqf::set_marker_alpha(_debugMarker, 0.3f);
 
             if (_side == common::RV::get().sides.East) {

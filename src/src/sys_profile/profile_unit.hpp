@@ -82,8 +82,6 @@ namespace alive {
 
                 void switchGroup(ProfileGroup* profile_);
 
-                void onLeftAssignedVehicle();
-
 
             protected:
 

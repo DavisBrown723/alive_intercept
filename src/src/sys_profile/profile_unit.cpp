@@ -41,6 +41,9 @@ namespace alive {
 
             if (_vehicleAssignment != nullptr)
                 leaveVehicle();
+
+            if (_active && sqf::alive(_unitObject))
+                sqf::delete_vehicle(_unitObject);
         }
 
 
@@ -126,10 +129,6 @@ namespace alive {
             this->leaveVehicle();
 
             _profile->removeUnit(this);
-        }
-
-        void ProfileUnit::onLeftAssignedVehicle() {
-            _vehicleAssignment = nullptr;
         }
 
     }
