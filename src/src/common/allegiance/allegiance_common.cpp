@@ -64,6 +64,19 @@ namespace alive {
                     return RV::get().sides.East;
             }
 
+            std::string getSideColor(const intercept::types::side& side_) {
+                if (side_ == RV::get().sides.East)
+                    return "ColorOPFOR";
+                else if (side_ == RV::get().sides.West)
+                    return "ColorBLUFOR";
+                else if (side_ == RV::get().sides.Guer)
+                    return "ColorIndependent";
+                else if (side_ == RV::get().sides.Civ)
+                    return "ColorCiv";
+
+                return "ColorOPFOR";
+            }
+
 
         }
     }
