@@ -222,6 +222,9 @@ namespace alive {
 
             _seatsLeft--;
 
+            if (_debugEnabled && _seatsLeft == _seatCount - 1)
+                sqf::set_marker_color(_debugMarker, common::allegiance::getSideColor(unit_->getGroup()->getSide()));
+
             return true;
         }
 
@@ -229,6 +232,9 @@ namespace alive {
             _vehicleAssignment->group->onUnitLeftAssignedVehicle(unit_, this);
 
             _seatsLeft++;
+
+            if (_debugEnabled && _vehicleAssignment == nullptr)
+                sqf::set_marker_color(_debugMarker, common::allegiance::getSideColor(common::RV::get().sides.Civ));
         }
 
 
@@ -255,40 +261,49 @@ namespace alive {
             std::string markerType;
             switch (_vehicleType) {
                 case common::vehicles::VehicleType::CAR:
-                case common::vehicles::VehicleType::TRUCK: {
+                case common::vehicles::VehicleType::TRUCK:
+                {
                     markerType = "motor_inf";
                     break;
                 }
-                case common::vehicles::VehicleType::MECHANIZED: {
+                case common::vehicles::VehicleType::MECHANIZED:
+                {
                     markerType = "mech_inf";
                     break;
                 }
                 case common::vehicles::VehicleType::ANTI_AIR:
-                case common::vehicles::VehicleType::TANK: {
+                case common::vehicles::VehicleType::TANK:
+                {
                     markerType = "armor";
                     break;
                 }
-                case common::vehicles::VehicleType::ARTILLERY: {
+                case common::vehicles::VehicleType::ARTILLERY:
+                {
                     markerType = "art";
                     break;
                 }
-                case common::vehicles::VehicleType::HELICOPTER: {
+                case common::vehicles::VehicleType::HELICOPTER:
+                {
                     markerType = "air";
                     break;
                 }
-                case common::vehicles::VehicleType::PLANE: {
+                case common::vehicles::VehicleType::PLANE:
+                {
                     markerType = "plane";
                     break;
                 }
-                case common::vehicles::VehicleType::STATIC_WEAPON: {
+                case common::vehicles::VehicleType::STATIC_WEAPON:
+                {
                     markerType = "mortar";
                     break;
                 }
-                case common::vehicles::VehicleType::SHIP: {
+                case common::vehicles::VehicleType::SHIP:
+                {
                     markerType = "naval";
                     break;
                 }
-                default: {
+                default:
+                {
                     markerType = "unknown";
                 }
             }
@@ -296,21 +311,27 @@ namespace alive {
             // use faction side to get correct
             // marker for empty vehicles
 
-            if ((common::allegiance::getFactionSide(_faction)) == common::RV::get().sides.East) {
-                sqf::set_marker_color(_debugMarker, "ColorRed");
-                sqf::set_marker_type(_debugMarker, "o_" + markerType);
-            } else if (_side == common::RV::get().sides.West) {
-                sqf::set_marker_color(_debugMarker, "ColorBlue");
-                sqf::set_marker_type(_debugMarker, "b_" + markerType);
-            } else if (_side == common::RV::get().sides.Guer) {
-                sqf::set_marker_color(_debugMarker, "ColorGreen");
-                sqf::set_marker_type(_debugMarker, "n_" + markerType);
+            if (_vehicleAssignment == nullptr) {
+                sqf::set_marker_color(_debugMarker, common::allegiance::getSideColor(common::RV::get().sides.Civ));
+
+                if (common::allegiance::getFactionSide(_faction) == common::RV::get().sides.East)
+                    sqf::set_marker_type(_debugMarker, "o_" + markerType);
+                else if (_side == common::RV::get().sides.West)
+                    sqf::set_marker_type(_debugMarker, "b_" + markerType);
+                else if (_side == common::RV::get().sides.Guer)
+                    sqf::set_marker_type(_debugMarker, "n_" + markerType);
+            } else {
+                intercept::types::side side = _vehicleAssignment->units[0]->getGroup()->getSide();
+
+                sqf::set_marker_color(_debugMarker, common::allegiance::getSideColor(side));
+
+                if (side == common::RV::get().sides.East)
+                    sqf::set_marker_type(_debugMarker, "o_" + markerType);
+                else if (_side == common::RV::get().sides.West)
+                    sqf::set_marker_type(_debugMarker, "b_" + markerType);
+                else if (_side == common::RV::get().sides.Guer)
+                    sqf::set_marker_type(_debugMarker, "n_" + markerType);
             }
-
-            // vehicle is unnocupied
-
-            if (false)
-                sqf::set_marker_color(_debugMarker, "ColorYellow");
         }
         
         void ProfileVehicle::_updateMovement() {
