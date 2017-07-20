@@ -5,6 +5,9 @@
 #include "sys_profile\include.hpp"
 
 #include "common\include.hpp"
+
+#include <algorithm>
+
 namespace alive {
     namespace sys_profile {
         namespace sqf_commands {
@@ -18,7 +21,7 @@ namespace alive {
                 intercept::types::registered_sqf_function _startProfileSystem;
                 intercept::types::registered_sqf_function _enableProfileSystemDebug;
 
-                intercept::types::registered_sqf_function _getProfiles;
+                intercept::types::registered_sqf_function _allProfiles;
                 intercept::types::registered_sqf_function _getProfilesBySide;
 
                 intercept::types::registered_sqf_function _createProfileGroup;
@@ -27,7 +30,6 @@ namespace alive {
                 intercept::types::registered_sqf_function _unregisterProfile;
 
                 intercept::types::registered_sqf_function _profileGetPosition;
-                intercept::types::registered_sqf_function _profileGetSpeed;
 
                 intercept::types::registered_sqf_function _profileAddWaypoint;
                 intercept::types::registered_sqf_function _profileRemoveWaypoint;
@@ -67,10 +69,10 @@ namespace alive {
 
                 // Profile Handler
 
-                sqf_commands::handles::_getProfiles = intercept::client::host::registerFunction(
-                    "getProfiles",
+                sqf_commands::handles::_allProfiles = intercept::client::host::registerFunction(
+                    "allProfiles",
                     "Returns an array of all ALiVE Profiles.",
-                    userFunctionWrapper<sqf_commands::getProfiles>,
+                    userFunctionWrapper<sqf_commands::allProfiles>,
                     intercept::types::GameDataType::ARRAY
                 );
 
@@ -109,17 +111,17 @@ namespace alive {
                 );
 
                 sqf_commands::handles::_profileGetPosition = intercept::client::host::registerFunction(
-                    "getProfilePosition",
+                    "profileGetPosition",
                     "Gets the position of an ALiVE Profile.",
                     userFunctionWrapper<sqf_commands::profileGetPosition>,
                     intercept::types::GameDataType::ARRAY,
                     intercept::types::GameDataType::STRING
                 );
 
-                sqf_commands::handles::_profileGetSpeed = intercept::client::host::registerFunction(
-                    "getProfileSpeed",
-                    "Gets the speed of an ALiVE Profile.",
-                    userFunctionWrapper<sqf_commands::profileGetSpeed>,
+                sqf_commands::handles::_profileGetPosition = intercept::client::host::registerFunction(
+                    "profileGetPosition",
+                    "Gets the position of an ALiVE Profile.",
+                    userFunctionWrapper<sqf_commands::profileGetPosition>,
                     intercept::types::GameDataType::ARRAY,
                     intercept::types::GameDataType::STRING
                 );
@@ -167,10 +169,10 @@ namespace alive {
                 if (ProfileSystem::isInitialized())
                     return game_value();
 
-                ProfileGroup* profile = (ProfileGroup*)ProfileSystem::get().getProfileHandler().getProfile(static_cast<std::string>(rightArg_));
+                ProfileGroup* profile = (ProfileGroup*)ProfileSystem::get().getProfileHandler().getProfile(rightArg_);
 
                 if (profile != nullptr)
-                    profile->removeWaypoint(0);
+                    profile->onWaypointComplete();
 
                 return game_value();
             }
@@ -214,34 +216,18 @@ namespace alive {
             // Profile Handler
 
 
-            game_value getProfiles() {
+            game_value allProfiles() {
                 if (!ProfileSystem::isInitialized())
                     return auto_array<game_value>();
 
-                auto profileVec = ProfileSystem::get().getProfileHandler().getProfiles();
-
-                std::vector<std::string> profileStringVec;
-                profileStringVec.reserve(profileVec.size());
-
-                for (auto& profile : profileVec)
-                    profileStringVec.push_back(profile->getID());
-
-                return auto_array<game_value>(profileStringVec.begin(), profileStringVec.end());
+                return ProfileSystem::get().getProfileHandler().getProfiles();
             }
 
             game_value getProfilesBySide(game_value rightArg_) {
                 if (!ProfileSystem::isInitialized())
                     return auto_array<game_value>();
 
-                auto profileVec = ProfileSystem::get().getProfileHandler().getProfiles(rightArg_);
-
-                std::vector<std::string> profileStringVec;
-                profileStringVec.reserve(profileVec.size());
-
-                for(auto& profile : profileVec)
-                    profileStringVec.push_back(profile->getID());
-
-                return auto_array<game_value>(profileStringVec.begin(), profileStringVec.end());
+                return ProfileSystem::get().getProfileHandler().getProfiles(rightArg_);
             }
 
 
@@ -274,7 +260,7 @@ namespace alive {
                     std::vector<std::string> unitClasses;
 
                     for (auto& item : profileArgs_[3].to_array())
-                        unitClasses.push_back(static_cast<std::string>(item));
+                        unitClasses.push_back(item);
 
                     profile = ProfileGroup::Create(side, faction, pos, unitClasses);
                 }
@@ -321,55 +307,45 @@ namespace alive {
                 if (!ProfileSystem::isInitialized())
                     return game_value();
 
-                Profile* profile = ProfileSystem::get().getProfileHandler().getProfile(static_cast<std::string>(profileID_));
+                Profile* profile = ProfileSystem::get().getProfileHandler().getProfile(profileID_);
 
-                ProfileSystem::get().getProfileHandler().unregisterProfile(profile);
+                if (profile != nullptr)
+                    ProfileSystem::get().getProfileHandler().unregisterProfile(profile);
 
                 return game_value();
             }
 
             game_value profileGetPosition(game_value profileID_) {
                 if (!ProfileSystem::isInitialized())
-                    return intercept::types::vector3(0, 0, 0);
+                    return { 0, 0, 0 };
 
-                ProfileGroup* profile = (ProfileGroup*)ProfileSystem::get().getProfileHandler().getProfile(static_cast<std::string>(profileID_));
+                ProfileGroup* profile = (ProfileGroup*)ProfileSystem::get().getProfileHandler().getProfile(profileID_);
 
                 if (profile != nullptr)
                     return profile->getPosition();
                 else
-                    return intercept::types::vector3(0, 0, 0);
-            }
-
-            game_value profileGetSpeed(game_value profileID_) {
-                if (!ProfileSystem::isInitialized())
-                    return game_value(-1.f);
-
-                ProfileGroup* profile = static_cast<ProfileGroup*>(
-                    ProfileSystem::get().getProfileHandler().getProfile(static_cast<std::string>(profileID_))
-                );
-
-                if (profile != nullptr)
-                    return static_cast<float>(profile->getSpeed());
-                else
-                    return game_value(-1.f);
+                    return { 0, 0, 0 };
             }
 
             game_value profileAddWaypoint(game_value profileID_, game_value waypointArgs_) {
                 if (!ProfileSystem::isInitialized())
                     return game_value();
 
-                ProfileGroup* profile = static_cast<ProfileGroup*>(
-                    ProfileSystem::get().getProfileHandler().getProfile(static_cast<std::string>(profileID_))
+                ProfileGroup* profile = (ProfileGroup*)(
+                    ProfileSystem::get().getProfileHandler().getProfile(profileID_)
                 );
 
                 if (profile != nullptr) {
-                    intercept::types::vector3 position = waypointArgs_[0];
+                    intercept::types::vector3 position = { 0,0,0 };
                     auto type = ProfileWaypoint::Type::MOVE;
                     int completionRadius = 50;
                     auto speed = ProfileWaypoint::Speed::UNCHANGED;
                     auto formation = ProfileWaypoint::Formation::WEDGE;
                     auto behavior = ProfileWaypoint::Behavior::UNCHANGED;
                     auto combatMode = ProfileWaypoint::CombatMode::NO_CHANGE;
+
+                    if (waypointArgs_.size() > 0)
+                        position = waypointArgs_[0];
 
                     if (waypointArgs_.size() > 1)
                         type = ProfileWaypoint::RVWaypoint::__parse_type(waypointArgs_[1]);

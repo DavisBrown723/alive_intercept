@@ -1,6 +1,8 @@
 #include "core.hpp"
 #include "intercept.hpp"
 
+#include "sys_profile\sqf_commands.hpp"
+
 #include "sys_profile\profile_system.hpp"
 #include "common\include.hpp"
 
@@ -58,7 +60,7 @@ namespace alive {
         // must be done on pre start
 
         Core::registerScriptCommands();
-        sys_profile::ProfileSystem::registerScriptCommands();
+        sys_profile::sqf_commands::registerScriptCommands();
 
         for (auto& module : _modules)
             module->onPreStart();

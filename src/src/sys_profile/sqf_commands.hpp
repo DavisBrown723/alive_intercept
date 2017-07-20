@@ -16,7 +16,7 @@ namespace alive {
                 extern intercept::types::registered_sqf_function _startProfileSystem;
                 extern intercept::types::registered_sqf_function _enableProfileSystemDebug;
 
-                extern intercept::types::registered_sqf_function _getProfiles;
+                extern intercept::types::registered_sqf_function _allProfiles;
                 extern intercept::types::registered_sqf_function _getProfilesBySide;
 
                 extern intercept::types::registered_sqf_function _createProfileGroup;
@@ -25,7 +25,6 @@ namespace alive {
                 extern intercept::types::registered_sqf_function _unregisterProfile;
 
                 extern intercept::types::registered_sqf_function _profileGetPosition;
-                extern intercept::types::registered_sqf_function _profileGetSpeed;
 
                 extern intercept::types::registered_sqf_function _profileAddWaypoint;
                 extern intercept::types::registered_sqf_function _profileRemoveWaypoint;
@@ -49,7 +48,7 @@ namespace alive {
 
             // Profile Handler
 
-            game_value getProfiles();
+            game_value allProfiles();
             game_value getProfilesBySide(game_value rightArg_);
 
             // Profiles
@@ -60,7 +59,6 @@ namespace alive {
             game_value unregisterProfile(game_value profileID_);
 
             game_value profileGetPosition(game_value profileID_);
-            game_value profileGetSpeed(game_value profileID_);
 
             game_value profileAddWaypoint(game_value profileID_, game_value waypointArgs_);
             game_value profileRemoveWaypoint(game_value profileID_, game_value waypointIndex_);
