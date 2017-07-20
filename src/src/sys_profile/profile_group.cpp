@@ -203,7 +203,7 @@ namespace alive {
             if (_waypoints.size() != groupWaypoints.size()) {
                 _waypoints.clear();
 
-                for (int i = static_cast<int>(sqf::current_waypoint(_groupObject)); i != groupWaypoints.size(); i++)
+                for (int i = static_cast<int>(sqf::current_waypoint(_groupObject)); i < groupWaypoints.size(); i++)
                     _waypoints.push_back(ProfileWaypoint(groupWaypoints[i]));
             }
 
@@ -370,6 +370,13 @@ namespace alive {
         void ProfileGroup::removeWaypoint(unsigned int index_) {
             if (index_ < _waypoints.size())
                 removeWaypoint(_waypoints.begin() + index_);
+        }
+
+        void ProfileGroup::onWaypointComplete() {
+            if (_cycleWaypointCount > 0)
+                addWaypoint(ProfileWaypoint(_waypoints[0]));
+
+            removeWaypoint(_waypoints.begin());
         }
 
         void ProfileGroup::onUnitLeftAssignedVehicle(ProfileUnit* unit_, ProfileVehicle* vehicle_) {

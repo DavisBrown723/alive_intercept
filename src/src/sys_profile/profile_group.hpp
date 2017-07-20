@@ -85,21 +85,25 @@ namespace alive {
                 virtual void spawn() override;
                 virtual void despawn() override;
 
-                virtual void addUnit(ProfileUnit* unit_);
-                virtual void removeUnit(ProfileUnit* unit_);
-                virtual void removeUnit(const std::string& unitID_);
+                void addUnit(ProfileUnit* unit_);
+                void removeUnit(ProfileUnit* unit_);
+                void removeUnit(const std::string& unitID_);
 
-                virtual bool garrisonVehicle(ProfileVehicle* vehicle_);
-                virtual bool unGarrisonVehicle(unsigned int index_);
-                virtual bool unGarrisonVehicle(GroupVehicleAssignment* assignment_);
-                virtual bool unGarrisonVehicle(ProfileVehicle* vehicle_);
-                virtual GroupVehicleAssignment* getVehicleAssignment(ProfileVehicle* vehicle_);
+                bool garrisonVehicle(ProfileVehicle* vehicle_);
+                bool unGarrisonVehicle(unsigned int index_);
+                bool unGarrisonVehicle(GroupVehicleAssignment* assignment_);
+                bool unGarrisonVehicle(ProfileVehicle* vehicle_);
+                GroupVehicleAssignment* getVehicleAssignment(ProfileVehicle* vehicle_);
 
-                virtual int addWaypoint(ProfileWaypoint& wp_);
-                virtual void removeWaypoint(unsigned int index_);
-                virtual void removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_);
+                int addWaypoint(ProfileWaypoint& wp_);
+                void removeWaypoint(unsigned int index_);
+                void removeWaypoint(const std::vector<ProfileWaypoint>::iterator& toDelete_);
+
+                void onWaypointComplete();
 
                 void onUnitLeftAssignedVehicle(ProfileUnit* unit_, ProfileVehicle* vehicle_);
+
+                operator std::string() { return _id; }
 
 
             protected:
