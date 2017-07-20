@@ -32,10 +32,6 @@ namespace alive {
             _profileHandler._profiles.clear();
             _profileHandler._profileMap.clear();
         }
-        
-        void ProfileSystem::registerScriptCommands() {
-            sqf_commands::registerScriptCommands();
-        }
 
         void ProfileSystem::start() {
             // register profile system with core
@@ -124,7 +120,6 @@ namespace alive {
             int spawnDistanceSqr = _spawnDistance * _spawnDistance;
             int despawnDistanceSqr = static_cast<int>(spawnDistanceSqr * 1.2);
 
-            bool inRange;
             intercept::types::vector3 profilePos;
 
 
@@ -135,24 +130,14 @@ namespace alive {
 
                 for (auto& playerPos : playerPositions) {
                     if (profile->isActive()) {
-                        inRange = true;
+                        if (common::math::distanceSqr(playerPos, profilePos) > despawnDistanceSqr) {
 
-                        if (inRange) {
-                            if (common::math::distanceSqr(playerPos, profilePos) > despawnDistanceSqr) {
-                                inRange = false;
-
-                                profile->despawn();
-                            }
+                            profile->despawn();
                         }
                     } else {
-                        inRange = false;
+                        if (common::math::distanceSqr(playerPos, profilePos) < spawnDistanceSqr) {
 
-                        if (!inRange) {
-                            if (common::math::distanceSqr(playerPos, profilePos) < spawnDistanceSqr) {
-                                inRange = true;
-
-                                profile->spawn();
-                            }
+                            profile->spawn();
                         }
                     }
                 }

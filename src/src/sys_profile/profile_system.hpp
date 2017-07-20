@@ -40,8 +40,6 @@ namespace alive {
 
                 // functional
 
-                static void registerScriptCommands();
-
                 virtual void onSimulationStep(const float dt_) override;
                 virtual void onMissionStopped() override;
                 virtual void onUnitKilled(intercept::types::object& killed_, intercept::types::object& killer_) override;

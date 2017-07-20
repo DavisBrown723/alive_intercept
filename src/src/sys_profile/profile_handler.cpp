@@ -51,16 +51,12 @@ namespace alive {
         }
 
         void ProfileHandler::unregisterProfile(Profile* profile_) {
-            ProfileVector::iterator it;
-
-            it = std::find(_profiles.begin(), _profiles.end(), profile_);
-
-            // exit if profile was not registered
+            auto it = std::find(_profiles.begin(), _profiles.end(), profile_);
 
             if (it == _profiles.end())
                 return;
 
-            (*it)->onKilled();
+            (*it)->onKilled(); // #TODO: Need to distinguish between killed and just unregistered
 
             _profiles.erase(it);
 
